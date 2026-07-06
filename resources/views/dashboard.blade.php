@@ -61,28 +61,28 @@
                 <div class="col-md-3">
                     <div class="p-3 bg-white border rounded-3">
                         <div class="text-muted">{{ __('messages.gdp') }}</div>
-                        <h3 class="fw-bold">-</h3>
+                        <h3 id="gdpValue" class="fw-bold">-</h3>
                     </div>
                 </div>
 
                 <div class="col-md-3">
                     <div class="p-3 bg-white border rounded-3">
                         <div class="text-muted">{{ __('messages.inflation') }}</div>
-                        <h3 class="fw-bold">-</h3>
+                        <h3 id="inflationValue" class="fw-bold">-</h3>
                     </div>
                 </div>
 
                 <div class="col-md-3">
                     <div class="p-3 bg-white border rounded-3">
                         <div class="text-muted">{{ __('messages.currency') }}</div>
-                        <h3 class="fw-bold">-</h3>
+                        <h3 id="currencyValue" class="fw-bold">-</h3>
                     </div>
                 </div>
 
                 <div class="col-md-3">
                     <div class="p-3 bg-white border rounded-3">
                         <div class="text-muted">{{ __('messages.risk_score') }}</div>
-                        <h3 class="fw-bold">-</h3>
+                        <h3 id="riskScoreValue" class="fw-bold">-</h3>
                     </div>
                 </div>
             </div>
@@ -94,13 +94,13 @@
 
                 <div class="row g-2">
                     <div class="col-md-10">
-                        <select class="form-select">
-                            <option>{{ __('messages.select_country') }}</option>
+                        <select id="countrySelect" class="form-select">
+                            <option value="">{{ __('messages.select_country') }}</option>
                         </select>
                     </div>
 
                     <div class="col-md-2">
-                        <button class="btn btn-primary w-100">
+                        <button onclick="analyzeCountry()" class="btn btn-primary w-100">
                             {{ __('messages.analyze') }}
                         </button>
                     </div>
@@ -110,6 +110,63 @@
         </div>
     </div>
 </div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        loadCountries();
+    });
+
+    async function loadCountries() {
+        try {
+            const response = await fetch('/api/countries');
+            const result = await response.json();
+
+            const select = document.getElementById('countrySelect');
+            select.innerHTML = '<option value="">{{ __("messages.select_country") }}</option>';
+
+            result.data.forEach(country => {
+                select.innerHTML += `
+                    <option value="${country.id}">
+                        ${country.name}
+                    </option>
+                `;
+            });
+        } catch (error) {
+            console.error(error);
+            alert('Gagal mengambil data negara.');
+        }
+    }
+
+    async function analyzeCountry() {
+        const countryId = document.getElementById('countrySelect').value;
+
+        if (!countryId) {
+            alert('Pilih negara terlebih dahulu.');
+            return;
+        }
+
+        try {
+            const countryResponse = await fetch(`/api/countries/${countryId}`);
+            const currencyResponse = await fetch(`/api/currency?country_id=${countryId}`);
+
+            const countryResult = await countryResponse.json();
+            const currencyResult = await currencyResponse.json();
+
+            const country = countryResult.data;
+            const currency = currencyResult.data;
+
+            document.getElementById('gdpValue').innerText = country.gdp_usd_billion + ' B';
+            document.getElementById('inflationValue').innerText = country.inflation_rate + '%';
+            document.getElementById('currencyValue').innerText = currency.currency_code;
+
+            document.getElementById('riskScoreValue').innerText = 'Week 3';
+
+        } catch (error) {
+            console.error(error);
+            alert('Gagal menganalisis negara.');
+        }
+    }
+</script>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 
