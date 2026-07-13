@@ -64,3 +64,18 @@ Endpoint yang ditambahkan:
 - `GET /api/risk?country_id={id}`
 
 Hasil perhitungan disimpan ke tabel `risk_scores` agar nantinya dapat digunakan untuk membuat grafik perkembangan risiko.
+
+Selanjutnya saya mengembangkan bagian visualisasi data agar hasil analisis negara lebih mudah dibaca dan dipahami.
+
+Fitur yang sudah ditambahkan:
+
+- Grafik perbandingan komponen risiko menggunakan Chart.js
+- Grafik tren nilai tukar mata uang terhadap IDR
+- Peta lokasi pelabuhan menggunakan Leaflet.js
+- Marker interaktif pada lokasi pelabuhan
+- Informasi tingkat kemacetan pelabuhan
+- Informasi perkiraan keterlambatan pengiriman
+- Tampilan visualisasi menyesuaikan negara yang dipilih
+- Dukungan Bahasa Inggris dan Bahasa Indonesia pada bagian analisis
+
+Data grafik dan peta diambil dari REST API yang sudah dibuat pada tahap sebelumnya. Setiap kali negara dipilih, dashboard akan memperbarui grafik, skor risiko, rekomendasi, dan lokasi pelabuhan secara otomatis.
