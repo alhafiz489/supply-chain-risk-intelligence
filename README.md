@@ -1,81 +1,173 @@
-Pertama saya mulai membuat dasar project terlebih dahulu. Saya melakukan setup project Laravel, mengatur koneksi database MySQL, membuat struktur awal dashboard, dan menambahkan fitur pilihan bahasa Inggris dan Indonesia.
+# SupplyGuard — Global Supply Chain Risk Intelligence
 
-Selain itu, saya juga mulai menyiapkan struktur database awal yang nanti akan digunakan untuk data negara, pelabuhan, berita, risk score, dan watchlist. Untuk sementara, fitur yang dibuat masih berupa fondasi awal agar pengembangan di minggu berikutnya lebih mudah dilanjutkan.
+SupplyGuard adalah aplikasi Laravel untuk menggabungkan data global, mengukur
+risiko rantai pasok per negara, memperkirakan keterlambatan pengiriman, dan
+menyajikan hasilnya melalui dashboard interaktif.
 
-Fokus minggu pertama ini adalah membuat project bisa berjalan, memiliki tampilan awal, serta memiliki struktur dasar yang sesuai dengan kebutuhan project.
+## Fitur utama
 
-saya mulai menghubungkan data yang ada di database dengan REST API. Data awal yang digunakan meliputi negara, pelabuhan, berita, dan informasi mata uang.
+- Analisis 250 negara dan wilayah.
+- Lima komponen risiko: cuaca, inflasi, mata uang, sentimen berita, dan pelabuhan.
+- Weighted Risk Model yang transparan beserta status kelengkapan data.
+- Prediksi rentang keterlambatan, confidence, dan faktor dominan.
+- Perbandingan beberapa negara.
+- Grafik komponen risiko dan tren kurs menggunakan Chart.js.
+- Peta pelabuhan interaktif menggunakan Leaflet dan OpenStreetMap.
+- Watchlist pribadi, autentikasi pengguna, serta hak akses admin.
+- Admin panel untuk sinkronisasi data, pengguna, berita, pelabuhan, kamus
+  sentimen, skor risiko, dan log API.
+- Web pengguna multibahasa melalui LibreTranslate lokal.
 
-Fitur yang sudah dibuat:
+## Sumber data
 
-- Menambahkan data awal negara melalui seeder
-- Menambahkan data awal pelabuhan
-- Menambahkan data berita sementara
-- Membuat API daftar negara
-- Membuat API detail negara
-- Membuat API data pelabuhan
-- Membuat API data berita
-- Membuat API mata uang
-- Menghubungkan dropdown negara pada dashboard dengan API
-- Menampilkan PDB, inflasi, dan mata uang sesuai negara yang dipilih
+| Sumber | Kegunaan | Kredensial |
+|---|---|---|
+| REST Countries | Master negara, bendera, bahasa, mata uang | Tergantung endpoint/provider |
+| World Bank API | GDP, inflasi, dan populasi | Tidak perlu API key |
+| Open-Meteo | Cuaca global | Tidak perlu API key |
+| Frankfurter | Kurs mata uang | Tidak perlu API key |
+| GNews | Berita ekonomi, perdagangan, dan logistik | `GNEWS_API_KEY` |
+| UN/LOCODE dataset | Referensi pelabuhan global | Tidak perlu API key |
+| OpenStreetMap | Basemap pada visualisasi Leaflet | Tidak perlu API key |
 
-Endpoint yang sudah tersedia:
+UN/LOCODE diperlakukan sebagai dataset referensi, sedangkan kondisi dan
+keterlambatan pelabuhan yang tersedia digunakan sebagai indikator analisis.
 
-- `GET /api/countries`
-- `GET /api/countries/{id}`
-- `GET /api/ports`
-- `GET /api/news`
-- `GET /api/currency?country_id={id}`
+## Algoritma risiko
 
-Untuk tahap ini, data masih menggunakan data awal dari seeder. Integrasi API eksternal dan perhitungan skor risiko akan dikembangkan.
+Setiap komponen dinilai pada skala 0–100, lalu dihitung dengan bobot:
 
-Selanjutnya saya mulai membuat sistem perhitungan risiko rantai pasok. Perhitungan dilakukan berdasarkan lima komponen, yaitu kondisi cuaca, inflasi, perubahan mata uang, sentimen berita, dan kondisi pelabuhan.
+| Komponen | Bobot |
+|---|---:|
+| Cuaca | 27% |
+| Inflasi | 21% |
+| Mata uang | 18% |
+| Sentimen berita | 22% |
+| Pelabuhan | 12% |
 
-Saya menggunakan metode weighted scoring dengan pembagian bobot yang saya tentukan berdasarkan pengaruh setiap indikator terhadap proses impor.
+Komponen yang belum memiliki data tidak otomatis dianggap aman. Sistem
+menormalisasi skor berdasarkan bobot yang tersedia dan menampilkan persentase
+kelengkapan data. Kategori hasil adalah Low, Moderate, High, dan Critical.
 
-Bobot yang digunakan:
+Prediksi keterlambatan menggunakan rata-rata keterlambatan pelabuhan sebagai
+baseline, kemudian menambahkan tekanan berdasarkan total risk score. Hasilnya
+berupa estimasi utama, rentang minimum–maksimum, confidence, jumlah sampel
+pelabuhan, dan tiga faktor risiko dominan. Metode ini bersifat explainable
+estimation, bukan klaim machine learning.
 
-- Risiko cuaca: 27%
-- Risiko inflasi: 21%
-- Risiko mata uang: 18%
-- Risiko berita: 22%
-- Risiko pelabuhan: 12%
+## Persyaratan
 
-Kategori risiko:
+- PHP 8.2 atau lebih baru
+- Composer
+- MySQL/MariaDB atau SQLite
+- Node.js dan npm
+- Docker Desktop + WSL2 jika fitur terjemahan lokal digunakan
 
-- 0–24: Low Risk
-- 25–49: Moderate Risk
-- 50–74: High Risk
-- 75–100: Critical Risk
+## Instalasi
 
-Fitur yang sudah dibuat:
+```powershell
+git clone <repository-url>
+cd supply-chain-risk
+composer install
+Copy-Item .env.example .env
+php artisan key:generate
+```
 
-- Endpoint perhitungan risiko negara
-- Perhitungan lima komponen risiko
-- Penyimpanan hasil perhitungan ke database
-- Penentuan label risiko
-- Pemberian rekomendasi bisnis
-- Menampilkan total skor pada dashboard
-- Menampilkan rincian setiap komponen risiko
-- Menyesuaikan label dan rekomendasi berdasarkan bahasa yang dipilih
+Atur koneksi database dan, bila digunakan, `GNEWS_API_KEY` serta
+`REST_COUNTRIES_API_KEY` pada `.env`. Setelah itu:
 
-Endpoint yang ditambahkan:
+```powershell
+php artisan migrate --seed
+npm install
+npm run build
+php artisan serve
+```
 
-- `GET /api/risk?country_id={id}`
+Aplikasi tersedia di `http://127.0.0.1:8000`.
 
-Hasil perhitungan disimpan ke tabel `risk_scores` agar nantinya dapat digunakan untuk membuat grafik perkembangan risiko.
+## Sinkronisasi data
 
-Selanjutnya saya mengembangkan bagian visualisasi data agar hasil analisis negara lebih mudah dibaca dan dipahami.
+```powershell
+php artisan supplyguard:sync-countries
+php artisan supplyguard:sync-economy
+php artisan supplyguard:sync-currency
+php artisan supplyguard:sync-weather
+php artisan supplyguard:sync-global-news
+php artisan supplyguard:sync-global-ports
+php artisan supplyguard:recalculate-risks
+```
 
-Fitur yang sudah ditambahkan:
+Untuk menjalankan pembaruan otomatis selama development:
 
-- Grafik perbandingan komponen risiko menggunakan Chart.js
-- Grafik tren nilai tukar mata uang terhadap IDR
-- Peta lokasi pelabuhan menggunakan Leaflet.js
-- Marker interaktif pada lokasi pelabuhan
-- Informasi tingkat kemacetan pelabuhan
-- Informasi perkiraan keterlambatan pengiriman
-- Tampilan visualisasi menyesuaikan negara yang dipilih
-- Dukungan Bahasa Inggris dan Bahasa Indonesia pada bagian analisis
+```powershell
+php artisan schedule:work
+```
 
-Data grafik dan peta diambil dari REST API yang sudah dibuat pada tahap sebelumnya. Setiap kali negara dipilih, dashboard akan memperbarui grafik, skor risiko, rekomendasi, dan lokasi pelabuhan secara otomatis.
+Jadwal produksi harus menjalankan `php artisan schedule:run` setiap menit.
+Perintah menggunakan pencegahan overlap agar sinkronisasi panjang tidak berjalan
+bersamaan.
+
+## Terjemahan lokal
+
+```powershell
+docker compose -f compose.translation.yml up -d
+php artisan config:clear
+php artisan supplyguard:translation-status
+```
+
+Model lokal yang disiapkan adalah English, Indonesia, Japanese, Arabic, dan
+Simplified Chinese. Proses boot pertama dapat memerlukan beberapa menit karena
+model harus diunduh. Cek kondisi container dengan:
+
+```powershell
+docker compose -f compose.translation.yml ps
+curl.exe http://127.0.0.1:5000/languages
+```
+
+## Endpoint aplikasi
+
+| Method | Endpoint | Fungsi |
+|---|---|---|
+| GET | `/api/countries` | Daftar negara |
+| GET | `/api/countries/{id}` | Detail negara |
+| GET | `/api/economy?country_id={id}` | Data ekonomi |
+| GET | `/api/currency?country_id={id}` | Kurs dan tren mata uang |
+| GET | `/api/news?country_id={id}` | Berita negara |
+| GET | `/api/ports?country_id={id}` | Pelabuhan negara |
+| GET | `/api/risk?country_id={id}` | Skor risiko dan prediksi keterlambatan |
+
+Semua permintaan API dicatat oleh middleware log untuk membantu audit sumber
+data dan diagnosis kegagalan.
+
+## Pengujian
+
+```powershell
+php artisan test
+```
+
+Test suite mencakup risk API dan prediksi keterlambatan, algoritma prediksi,
+watchlist pengguna, pembatasan admin, serta integrasi penerjemahan.
+
+## Struktur penting
+
+- `app/Services/RiskScoringService.php` — weighted risk model.
+- `app/Services/DelayPredictionService.php` — estimasi keterlambatan explainable.
+- `app/Services/SentimentAnalysisService.php` — analisis sentimen lexicon-based.
+- `routes/console.php` — jadwal sinkronisasi data.
+- `resources/views/dashboard.blade.php` — dashboard analitik pengguna.
+- `resources/views/admin` — dashboard operasional administrator.
+
+## Checklist demo
+
+1. Pastikan database, Laravel, dan LibreTranslate berstatus aktif.
+2. Pilih negara dengan kelengkapan data tinggi pada Dashboard.
+3. Jelaskan lima komponen, bobot, total skor, dan rekomendasi.
+4. Tunjukkan prediksi keterlambatan beserta confidence dan faktor dominan.
+5. Tunjukkan grafik, peta pelabuhan, perbandingan negara, dan watchlist.
+6. Masuk sebagai admin untuk menunjukkan sinkronisasi dan log API.
+7. Demonstrasikan perubahan bahasa pada web pengguna.
+
+## Catatan keamanan
+
+Jangan commit `.env`, API key, password database, atau kredensial akun demo.
+Gunakan `.env.example` hanya sebagai daftar nama konfigurasi.

@@ -12,6 +12,7 @@ class DatabaseSeeder extends Seeder
             CountrySeeder::class,
             PortSeeder::class,
             NewsCacheSeeder::class,
+            SentimentWordSeeder::class,
         ]);
     }
 }

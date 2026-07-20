@@ -5,104 +5,151 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Models\Country;
 use App\Models\RiskScore;
+use App\Services\RiskScoringService;
+use App\Services\DelayPredictionService;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
 class RiskController extends Controller
 {
-    public function show(Request $request)
-    {
-        $request->validate([
-            'country_id' => ['required', 'integer', 'exists:countries,id'],
+    private const COMPONENT_WEIGHTS = [
+        'weather_risk' => 27,
+        'inflation_risk' => 21,
+        'currency_risk' => 18,
+        'news_risk' => 22,
+        'port_risk' => 12,
+    ];
+
+    /**
+     * Endpoint utama GET /api/risk.
+     */
+    public function index(
+        Request $request,
+        RiskScoringService $riskScoring,
+        DelayPredictionService $delayPrediction
+    ): JsonResponse {
+        return $this->buildResponse(
+            $request,
+            $riskScoring,
+            $delayPrediction
+        );
+    }
+
+    /**
+     * Dipertahankan untuk kompatibilitas dengan route lama
+     * yang masih memanggil RiskController@show.
+     */
+    public function show(
+        Request $request,
+        RiskScoringService $riskScoring,
+        DelayPredictionService $delayPrediction
+    ): JsonResponse {
+        return $this->buildResponse(
+            $request,
+            $riskScoring,
+            $delayPrediction
+        );
+    }
+
+    private function buildResponse(
+        Request $request,
+        RiskScoringService $riskScoring,
+        DelayPredictionService $delayPrediction
+    ): JsonResponse {
+        $validated = $request->validate([
+            'country_id' => [
+                'required',
+                'integer',
+                'exists:countries,id',
+            ],
         ]);
 
-        $country = Country::with(['ports', 'news'])
-            ->findOrFail($request->country_id);
-
-        $weatherRisk = $this->calculateWeatherRisk($country);
-        $inflationRisk = $this->calculateInflationRisk(
-            (float) $country->inflation_rate
-        );
-        $currencyRisk = $this->calculateCurrencyRisk(
-            (float) $country->currency_volatility_percent
-        );
-        $newsRisk = $this->calculateNewsRisk($country);
-        $portRisk = $this->calculatePortRisk($country);
+        $country = Country::query()
+            ->findOrFail($validated['country_id']);
 
         /*
         |--------------------------------------------------------------------------
-        | Algoritma SupplyGuard Adaptive Risk Index
+        | GET API hanya menghitung, tidak menyimpan riwayat baru
         |--------------------------------------------------------------------------
         |
-        | Weather  = 27%
-        | Inflation = 21%
-        | Currency  = 18%
-        | News      = 22%
-        | Port      = 12%
+        | Penyimpanan massal tetap dilakukan melalui tombol/perintah hitung ulang
+        | admin. Membuka dashboard tidak akan menambah record risk_scores.
         |
         */
 
-        $totalScore = round(
-            ($weatherRisk * 0.27) +
-            ($inflationRisk * 0.21) +
-            ($currencyRisk * 0.18) +
-            ($newsRisk * 0.22) +
-            ($portRisk * 0.12)
-        );
+        $result = $riskScoring->calculate($country);
+        $prediction = $delayPrediction->predict($country, $result);
 
-        $riskLabel = $this->getRiskLabel($totalScore);
-        $recommendation = $this->getRecommendation($totalScore);
+        $components = [];
 
-        $savedRisk = RiskScore::create([
-            'country_id' => $country->id,
-            'weather_risk' => $weatherRisk,
-            'inflation_risk' => $inflationRisk,
-            'currency_risk' => $currencyRisk,
-            'news_risk' => $newsRisk,
-            'port_risk' => $portRisk,
-            'total_score' => $totalScore,
-            'risk_label' => $riskLabel,
-            'recommendation' => $recommendation,
-        ]);
+        foreach (self::COMPONENT_WEIGHTS as $key => $weight) {
+            $components[$key] = [
+                'score' => (int) (
+                    $result['components'][$key]
+                    ?? 50
+                ),
+                'weight' => $weight,
+                'available' => (bool) (
+                    $result['component_availability'][$key]
+                    ?? false
+                ),
+                'note' => (string) (
+                    $result['component_notes'][$key]
+                    ?? ''
+                ),
+            ];
+        }
+
+        $latestRiskScoreId = RiskScore::query()
+            ->where('country_id', $country->id)
+            ->latest('id')
+            ->value('id');
 
         return response()->json([
             'success' => true,
-            'message' => 'Risk score berhasil dihitung.',
+            'message' => app()->getLocale() === 'id'
+                ? 'Risk score berhasil dihitung.'
+                : 'Risk score calculated successfully.',
+
             'data' => [
-                'risk_score_id' => $savedRisk->id,
+                /*
+                 * ID ini adalah riwayat terakhir yang sudah tersimpan,
+                 * bukan record baru dari request GET ini.
+                 */
+                'risk_score_id' => $latestRiskScoreId,
 
                 'country' => [
                     'id' => $country->id,
                     'name' => $country->name,
                     'iso2' => $country->iso2,
+                    'iso3' => $country->iso3,
                     'currency_code' => $country->currency_code,
                 ],
 
-                'components' => [
-                    'weather_risk' => [
-                        'score' => $weatherRisk,
-                        'weight' => 27,
-                    ],
-                    'inflation_risk' => [
-                        'score' => $inflationRisk,
-                        'weight' => 21,
-                    ],
-                    'currency_risk' => [
-                        'score' => $currencyRisk,
-                        'weight' => 18,
-                    ],
-                    'news_risk' => [
-                        'score' => $newsRisk,
-                        'weight' => 22,
-                    ],
-                    'port_risk' => [
-                        'score' => $portRisk,
-                        'weight' => 12,
-                    ],
-                ],
+                'components' => $components,
 
-                'total_score' => $totalScore,
-                'risk_label' => $riskLabel,
-                'recommendation' => $recommendation,
+                'component_availability' =>
+                    $result['component_availability'],
+
+                'component_notes' =>
+                    $result['component_notes'],
+
+                'total_score' =>
+                    $result['total_score'],
+
+                'risk_label' =>
+                    $result['risk_label'],
+
+                'recommendation' =>
+                    $result['recommendation'],
+
+                'delay_prediction' => $prediction,
+
+                'data_completeness_percent' =>
+                    $result['data_completeness_percent'],
+
+                'risk_data_status' =>
+                    $result['risk_data_status'],
 
                 'formula' => [
                     'weather' => '27%',
@@ -113,151 +160,5 @@ class RiskController extends Controller
                 ],
             ],
         ]);
-    }
-
-    private function calculateWeatherRisk(Country $country): int
-    {
-        $rainfallRisk = min(
-            40,
-            round((float) $country->rainfall_mm * 1.6)
-        );
-
-        $windRisk = min(
-            35,
-            round((float) $country->wind_speed_kmh * 0.7)
-        );
-
-        $conditionRisk = match (
-            strtolower((string) $country->weather_condition)
-        ) {
-            'storm', 'thunderstorm' => 25,
-            'heavy rain' => 20,
-            'rain' => 14,
-            'windy' => 12,
-            'cloudy' => 6,
-            default => 2,
-        };
-
-        return min(
-            100,
-            $rainfallRisk + $windRisk + $conditionRisk
-        );
-    }
-
-    private function calculateInflationRisk(float $inflation): int
-    {
-        /*
-         * Setiap kenaikan inflasi 1% memberikan sekitar 8 poin risiko.
-         */
-
-        return min(
-            100,
-            max(5, round($inflation * 8))
-        );
-    }
-
-    private function calculateCurrencyRisk(float $volatility): int
-    {
-        /*
-         * Volatilitas mata uang memiliki pengaruh langsung
-         * terhadap ketidakpastian biaya impor.
-         */
-
-        return min(
-            100,
-            max(5, round($volatility * 14))
-        );
-    }
-
-    private function calculateNewsRisk(Country $country): int
-    {
-        if ($country->news->isEmpty()) {
-            return 50;
-        }
-
-        $totalScore = 0;
-
-        foreach ($country->news as $news) {
-            $totalScore += match (
-                strtolower((string) $news->sentiment)
-            ) {
-                'positive' => 20,
-                'negative' => 85,
-                default => 50,
-            };
-        }
-
-        return min(
-            100,
-            round($totalScore / $country->news->count())
-        );
-    }
-
-    private function calculatePortRisk(Country $country): int
-    {
-        if ($country->ports->isEmpty()) {
-            return 55;
-        }
-
-        $totalScore = 0;
-
-        foreach ($country->ports as $port) {
-            $congestionScore = match (
-                strtolower((string) $port->congestion_level)
-            ) {
-                'high' => 70,
-                'medium' => 42,
-                default => 15,
-            };
-
-            $delayScore = min(
-                30,
-                (int) $port->delay_days * 7
-            );
-
-            $totalScore += min(
-                100,
-                $congestionScore + $delayScore
-            );
-        }
-
-        return min(
-            100,
-            round($totalScore / $country->ports->count())
-        );
-    }
-
-    private function getRiskLabel(int $score): string
-    {
-        if ($score <= 24) {
-            return 'Low Risk';
-        }
-
-        if ($score <= 49) {
-            return 'Moderate Risk';
-        }
-
-        if ($score <= 74) {
-            return 'High Risk';
-        }
-
-        return 'Critical Risk';
-    }
-
-    private function getRecommendation(int $score): string
-    {
-        if ($score <= 24) {
-            return 'Shipment can proceed with normal monitoring.';
-        }
-
-        if ($score <= 49) {
-            return 'Continue shipment with additional monitoring.';
-        }
-
-        if ($score <= 74) {
-            return 'Review shipment schedule and prepare a backup plan.';
-        }
-
-        return 'Consider delaying shipment or selecting an alternative supplier.';
     }
 }

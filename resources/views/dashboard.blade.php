@@ -21,374 +21,164 @@
     <!-- Chart.js -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
-    <style>
-        :root {
-            --primary-color: #2563eb;
-            --primary-dark: #1d4ed8;
-            --dark-color: #111827;
-            --muted-color: #64748b;
-            --page-background: #f4f7fb;
-        }
-
-        * {
-            box-sizing: border-box;
-        }
-
-        body {
-            min-height: 100vh;
-            margin: 0;
-            background:
-                radial-gradient(
-                    circle at top right,
-                    rgba(37, 99, 235, 0.08),
-                    transparent 32%
-                ),
-                var(--page-background);
-            color: #1f2937;
-        }
-
-        .navbar-custom {
-            background: rgba(17, 24, 39, 0.97);
-            box-shadow: 0 8px 24px rgba(15, 23, 42, 0.12);
-        }
-
-        .brand-mark {
-            width: 38px;
-            height: 38px;
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            flex-shrink: 0;
-            border-radius: 12px;
-            background: linear-gradient(135deg, #3b82f6, #1d4ed8);
-            color: #ffffff;
-            font-size: 18px;
-            font-weight: 800;
-        }
-
-        .main-card {
-            border: 0;
-            border-radius: 24px;
-            box-shadow: 0 18px 50px rgba(15, 23, 42, 0.08);
-            overflow: hidden;
-        }
-
-        .hero-badge {
-            display: inline-flex;
-            align-items: center;
-            gap: 8px;
-            padding: 7px 13px;
-            border-radius: 999px;
-            background: #eff6ff;
-            color: #1d4ed8;
-            font-size: 13px;
-            font-weight: 700;
-        }
-
-        .page-title {
-            max-width: 960px;
-            font-size: clamp(30px, 4vw, 48px);
-            line-height: 1.15;
-            letter-spacing: -1.5px;
-        }
-
-        .page-subtitle {
-            max-width: 940px;
-            color: var(--muted-color);
-            line-height: 1.7;
-        }
-
-        .metric-card {
-            height: 100%;
-            min-height: 150px;
-            padding: 22px;
-            border: 1px solid #e5e7eb;
-            border-radius: 18px;
-            background: #ffffff;
-            transition:
-                transform 0.2s ease,
-                box-shadow 0.2s ease,
-                border-color 0.2s ease;
-        }
-
-        .metric-card:hover {
-            transform: translateY(-3px);
-            border-color: #bfdbfe;
-            box-shadow: 0 12px 30px rgba(15, 23, 42, 0.08);
-        }
-
-        .metric-label {
-            margin-bottom: 12px;
-            color: var(--muted-color);
-            font-size: 14px;
-            font-weight: 600;
-        }
-
-        .metric-value {
-            margin-bottom: 0;
-            font-size: 28px;
-            font-weight: 800;
-            letter-spacing: -0.7px;
-            overflow-wrap: anywhere;
-        }
-
-        .analysis-panel,
-        .component-section,
-        .visualization-section {
-            padding: 24px;
-            border: 1px solid #e5e7eb;
-            border-radius: 18px;
-            background: #ffffff;
-        }
-
-        .analysis-panel {
-            background: #f8fafc;
-        }
-
-        .form-select {
-            min-height: 50px;
-            border-radius: 12px;
-        }
-
-        .analyze-button {
-            min-height: 50px;
-            border: 0;
-            border-radius: 12px;
-            background: linear-gradient(
-                135deg,
-                var(--primary-color),
-                var(--primary-dark)
-            );
-            font-weight: 700;
-            box-shadow: 0 10px 24px rgba(37, 99, 235, 0.22);
-        }
-
-        .analyze-button:hover,
-        .analyze-button:focus {
-            background: linear-gradient(135deg, #1d4ed8, #1e40af);
-        }
-
-        .recommendation-box {
-            padding: 22px;
-            border: 1px solid #bfdbfe;
-            border-radius: 18px;
-            background: linear-gradient(135deg, #eff6ff, #f8fbff);
-        }
-
-        .component-item {
-            height: 100%;
-            padding: 16px;
-            border: 1px solid #e5e7eb;
-            border-radius: 15px;
-            background: #f8fafc;
-        }
-
-        .component-score {
-            font-size: 23px;
-            font-weight: 800;
-        }
-
-        .component-weight {
-            color: var(--muted-color);
-            font-size: 12px;
-        }
-
-        .progress {
-            height: 8px;
-            border-radius: 999px;
-            background: #e5e7eb;
-        }
-
-        .progress-bar {
-            border-radius: 999px;
-            transition: width 0.5s ease;
-        }
-
-        .risk-badge {
-            display: inline-flex;
-            align-items: center;
-            padding: 7px 11px;
-            border-radius: 999px;
-            font-size: 12px;
-            font-weight: 700;
-        }
-
-        .risk-low {
-            background: #dcfce7;
-            color: #166534;
-        }
-
-        .risk-moderate {
-            background: #fef3c7;
-            color: #92400e;
-        }
-
-        .risk-high {
-            background: #fee2e2;
-            color: #991b1b;
-        }
-
-        .risk-critical {
-            background: #111827;
-            color: #ffffff;
-        }
-
-        .status-message {
-            border-radius: 14px;
-        }
-
-        .visualization-card {
-            height: 100%;
-            padding: 20px;
-            border: 1px solid #e5e7eb;
-            border-radius: 16px;
-            background: #f8fafc;
-        }
-
-        .chart-container {
-            position: relative;
-            width: 100%;
-            height: 320px;
-        }
-
-        #portMap {
-            width: 100%;
-            height: 420px;
-            border: 1px solid #e5e7eb;
-            border-radius: 15px;
-            z-index: 1;
-        }
-
-        .port-information {
-            padding: 15px;
-            border: 1px solid #e5e7eb;
-            border-radius: 14px;
-            background: #f8fafc;
-        }
-
-        .port-status-badge {
-            display: inline-flex;
-            flex-shrink: 0;
-            padding: 5px 10px;
-            border-radius: 999px;
-            font-size: 12px;
-            font-weight: 700;
-        }
-
-        .port-status-low {
-            color: #166534;
-            background: #dcfce7;
-        }
-
-        .port-status-medium {
-            color: #92400e;
-            background: #fef3c7;
-        }
-
-        .port-status-high {
-            color: #991b1b;
-            background: #fee2e2;
-        }
-
-        @media (max-width: 767.98px) {
-            .main-card .card-body {
-                padding: 24px !important;
-            }
-
-            .page-title {
-                letter-spacing: -0.8px;
-            }
-
-            .navbar .container {
-                gap: 14px;
-            }
-
-            .navbar-actions {
-                width: 100%;
-                justify-content: flex-end;
-            }
-
-            .chart-container {
-                height: 280px;
-            }
-
-            #portMap {
-                height: 340px;
-            }
-        }
-    </style>
+    <link rel="stylesheet" href="{{ asset('css/supplyguard-professional.css') }}">
 </head>
 
-<body>
-<nav class="navbar navbar-expand-lg navbar-dark navbar-custom">
-    <div class="container py-2">
-        <a
-            class="navbar-brand d-flex align-items-center gap-2 fw-bold"
-            href="{{ url('/') }}"
-        >
-            <span class="brand-mark">S</span>
-            <span>SupplyGuard</span>
+<body class="sg-user-body">
+<nav class="navbar navbar-expand-lg navbar-dark sg-user-navbar">
+    <div class="container-xxl">
+        <a class="sg-brand navbar-brand" href="{{ route('dashboard') }}">
+            <span class="sg-brand-mark">S</span>
+            <span class="sg-brand-copy">
+                <span class="sg-brand-title">SupplyGuard</span>
+                <span class="sg-brand-caption">Risk Intelligence Platform</span>
+            </span>
         </a>
 
-        <div class="navbar-actions d-flex gap-2 align-items-center">
-            <div class="dropdown">
-                <button
-                    class="btn btn-outline-light dropdown-toggle"
-                    type="button"
-                    data-bs-toggle="dropdown"
-                    aria-expanded="false"
-                >
-                    {{ __('messages.choose_language') }}
-                </button>
+        <button class="navbar-toggler" type="button"
+                data-bs-toggle="collapse" data-bs-target="#userMainNavigation"
+                aria-controls="userMainNavigation" aria-expanded="false"
+                aria-label="Buka navigasi">
+            <span class="navbar-toggler-icon"></span>
+        </button>
 
-                <ul class="dropdown-menu dropdown-menu-end shadow border-0">
-                    <li>
-                        <a
-                            class="dropdown-item py-2"
-                            href="{{ route('language.switch', ['locale' => 'en']) }}"
-                        >
-                            🇬🇧 {{ __('messages.english') }}
-                        </a>
-                    </li>
+        <div class="collapse navbar-collapse" id="userMainNavigation">
+            <ul class="navbar-nav ms-lg-4 me-auto sg-user-nav">
+                <li class="nav-item">
+                    <a href="{{ route('dashboard') }}"
+                       class="nav-link {{ request()->routeIs('dashboard') ? 'active' : '' }}">
+                        {{ app()->getLocale() === 'id' ? 'Dashboard' : 'Dashboard' }}
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="{{ route('country.comparison') }}"
+                       class="nav-link {{ request()->routeIs('country.comparison') ? 'active' : '' }}">
+                        {{ app()->getLocale() === 'id' ? 'Perbandingan Negara' : 'Country Comparison' }}
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="{{ route('watchlist.index') }}"
+                       class="nav-link {{ request()->routeIs('watchlist.*') ? 'active' : '' }}">
+                        {{ app()->getLocale() === 'id' ? 'Daftar Favorit' : 'Favorite List' }}
+                    </a>
+                </li>
+            </ul>
 
-                    <li>
-                        <a
-                            class="dropdown-item py-2"
-                            href="{{ route('language.switch', ['locale' => 'id']) }}"
-                        >
-                            🇮🇩 {{ __('messages.indonesian') }}
+            <div class="d-flex flex-column flex-lg-row align-items-lg-center gap-2">
+                @auth
+                    @if (auth()->user()->role === 'admin')
+                        <a href="{{ route('admin.dashboard') }}" class="sg-nav-action text-decoration-none">
+                            {{ app()->getLocale() === 'id' ? 'Panel Admin' : 'Admin Panel' }}
                         </a>
-                    </li>
-                </ul>
+                    @endif
+                @endauth
+
+                @include('user.partials.language-selector')
+
+                @auth
+                    <div class="sg-user-chip">
+                        <span class="sg-user-avatar">
+                            {{ strtoupper(substr(auth()->user()->name, 0, 1)) }}
+                        </span>
+                        <span class="small fw-semibold">{{ auth()->user()->name }}</span>
+                    </div>
+
+                    <form method="POST" action="{{ route('logout') }}" class="m-0">
+                        @csrf
+                        <button type="submit" class="sg-nav-action">
+                            {{ app()->getLocale() === 'id' ? 'Keluar' : 'Logout' }}
+                        </button>
+                    </form>
+                @else
+                    <a href="{{ route('login') }}" class="btn btn-primary px-4 rounded-3 fw-semibold">
+                        {{ __('messages.login') }}
+                    </a>
+                @endauth
             </div>
-
-            <a href="#" class="btn btn-primary px-4">
-                {{ __('messages.login') }}
-            </a>
         </div>
     </div>
 </nav>
 
-<main class="container py-5">
-    <div class="card main-card">
-        <div class="card-body p-5">
-            <span class="hero-badge mb-3">
-                Supply Chain Intelligence
-            </span>
+@if (session('language_success'))
+    <div class="container-xxl mt-3">
+        <div class="alert alert-info alert-dismissible fade show shadow-sm" role="alert">
+            {{ session('language_success') }}
 
-            <h1 class="page-title fw-bold mb-3">
-                {{ __('messages.app_title') }}
-            </h1>
+            <button
+                type="button"
+                class="btn-close"
+                data-bs-dismiss="alert"
+                aria-label="Tutup"
+            ></button>
+        </div>
+    </div>
+@endif
 
-            <p class="page-subtitle fs-5 mb-4">
-                {{ __('messages.app_subtitle') }}
-            </p>
 
-            <hr class="mb-4">
+<main class="sg-page">
+    <div class="container-xxl">
+        <section class="sg-hero">
+            <div class="sg-hero-grid">
+                <div>
+                    <span class="sg-eyebrow">
+                        <span class="sg-eyebrow-dot"></span>
+                        Supply Chain Intelligence
+                    </span>
 
-            <!-- Ringkasan utama -->
+                    <h1 class="page-title">
+                        {{ __('messages.app_title') }}
+                    </h1>
+
+                    <p class="page-subtitle">
+                        {{ __('messages.app_subtitle') }}
+                    </p>
+                </div>
+
+                <div class="sg-hero-status">
+                    <div class="sg-hero-status-item">
+                        <span class="sg-hero-status-icon">◎</span>
+                        <div>
+                            <div class="sg-hero-status-label">
+                                {{ app()->getLocale() === 'id' ? 'Cakupan' : 'Coverage' }}
+                            </div>
+                            <div class="sg-hero-status-value">
+                                {{ app()->getLocale() === 'id' ? '250 Negara & Wilayah' : '250 Countries & Territories' }}
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="sg-hero-status-item">
+                        <span class="sg-hero-status-icon">↻</span>
+                        <div>
+                            <div class="sg-hero-status-label">
+                                {{ app()->getLocale() === 'id' ? 'Pembaruan' : 'Updates' }}
+                            </div>
+                            <div class="sg-hero-status-value">
+                                {{ app()->getLocale() === 'id' ? 'Data Terjadwal Otomatis' : 'Automated Scheduled Data' }}
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="sg-hero-status-item">
+                        <span class="sg-hero-status-icon">◇</span>
+                        <div>
+                            <div class="sg-hero-status-label">
+                                {{ app()->getLocale() === 'id' ? 'Analisis' : 'Analysis' }}
+                            </div>
+                            <div class="sg-hero-status-value">
+                                {{ app()->getLocale() === 'id' ? '5 Komponen Risiko' : '5 Risk Components' }}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <div class="card main-card">
+            <div class="card-body p-4 p-xl-5">
+<!-- Ringkasan utama -->
             <div class="row g-3">
-                <div class="col-sm-6 col-xl-3">
+                <div class="col-sm-6 col-xl">
                     <div class="metric-card">
                         <div class="metric-label">
                             {{ __('messages.gdp') }}
@@ -402,7 +192,7 @@
                     </div>
                 </div>
 
-                <div class="col-sm-6 col-xl-3">
+                <div class="col-sm-6 col-xl">
                     <div class="metric-card">
                         <div class="metric-label">
                             {{ __('messages.inflation') }}
@@ -416,7 +206,7 @@
                     </div>
                 </div>
 
-                <div class="col-sm-6 col-xl-3">
+                <div class="col-sm-6 col-xl">
                     <div class="metric-card">
                         <div class="metric-label">
                             {{ __('messages.currency') }}
@@ -430,7 +220,7 @@
                     </div>
                 </div>
 
-                <div class="col-sm-6 col-xl-3">
+                <div class="col-sm-6 col-xl">
                     <div class="metric-card">
                         <div class="metric-label">
                             {{ __('messages.risk_score') }}
@@ -441,6 +231,28 @@
                         <span
                             id="riskLabelValue"
                             class="risk-badge bg-secondary text-white"
+                        >
+                            -
+                        </span>
+                    </div>
+                </div>
+
+                <div class="col-sm-6 col-xl">
+                    <div class="metric-card">
+                        <div class="metric-label">
+                            {{ app()->getLocale() === 'id'
+                                ? 'Kelengkapan Data'
+                                : 'Data Completeness'
+                            }}
+                        </div>
+
+                        <h3 id="dataCompletenessValue" class="metric-value mb-2">
+                            -
+                        </h3>
+
+                        <span
+                            id="dataCompletenessStatus"
+                            class="quality-badge quality-unavailable"
                         >
                             -
                         </span>
@@ -485,7 +297,73 @@
                 ></div>
             </section>
 
+            <!-- Status kelengkapan data -->
+            <section
+                id="dataQualityPanel"
+                class="data-quality-panel mt-4 d-none"
+                aria-live="polite"
+            >
+                <div class="d-flex flex-column flex-lg-row align-items-lg-center justify-content-between gap-3">
+                    <div>
+                        <div class="d-flex align-items-center gap-2 flex-wrap mb-2">
+                            <h5 class="fw-bold mb-0">
+                                {{ app()->getLocale() === 'id'
+                                    ? 'Status Kualitas Data'
+                                    : 'Data Quality Status'
+                                }}
+                            </h5>
+
+                            <span
+                                id="dataQualityBadge"
+                                class="quality-badge quality-unavailable"
+                            >
+                                -
+                            </span>
+                        </div>
+
+                        <p id="dataQualityMessage" class="text-secondary mb-0">
+                            -
+                        </p>
+                    </div>
+
+                    <div class="text-lg-end">
+                        <div class="small text-muted">
+                            {{ app()->getLocale() === 'id'
+                                ? 'Kelengkapan komponen'
+                                : 'Component completeness'
+                            }}
+                        </div>
+
+                        <div id="dataQualityPercent" class="fs-3 fw-bold">
+                            -
+                        </div>
+                    </div>
+                </div>
+            </section>
+
             <!-- Rekomendasi -->
+            <section
+                id="delayPredictionBox"
+                class="recommendation-box mt-4 d-none"
+                aria-live="polite"
+            >
+                <div class="d-flex flex-column flex-lg-row justify-content-between gap-3">
+                    <div>
+                        <h5 class="fw-bold mb-2">
+                            {{ app()->getLocale() === 'id'
+                                ? 'Prediksi Keterlambatan Pengiriman'
+                                : 'Shipment Delay Prediction' }}
+                        </h5>
+                        <p id="delayPredictionSummary" class="mb-1 text-secondary">-</p>
+                        <small id="delayPredictionFactors" class="text-muted">-</small>
+                    </div>
+                    <div class="text-lg-end">
+                        <div id="delayPredictionDays" class="fs-3 fw-bold">-</div>
+                        <span id="delayPredictionConfidence" class="quality-badge quality-unavailable">-</span>
+                    </div>
+                </div>
+            </section>
+
             <section
                 id="riskRecommendationBox"
                 class="recommendation-box mt-4 d-none"
@@ -554,6 +432,22 @@
                                     style="width: 0%"
                                 ></div>
                             </div>
+
+                            <div class="mt-2">
+                                <span
+                                    id="weatherRiskStatus"
+                                    class="component-availability-badge component-unavailable"
+                                >
+                                    -
+                                </span>
+                            </div>
+
+                            <div
+                                id="weatherRiskNote"
+                                class="component-note"
+                            >
+                                -
+                            </div>
                         </div>
                     </div>
 
@@ -576,6 +470,22 @@
                                     class="progress-bar"
                                     style="width: 0%"
                                 ></div>
+                            </div>
+
+                            <div class="mt-2">
+                                <span
+                                    id="inflationRiskStatus"
+                                    class="component-availability-badge component-unavailable"
+                                >
+                                    -
+                                </span>
+                            </div>
+
+                            <div
+                                id="inflationRiskNote"
+                                class="component-note"
+                            >
+                                -
                             </div>
                         </div>
                     </div>
@@ -600,6 +510,22 @@
                                     style="width: 0%"
                                 ></div>
                             </div>
+
+                            <div class="mt-2">
+                                <span
+                                    id="currencyRiskStatus"
+                                    class="component-availability-badge component-unavailable"
+                                >
+                                    -
+                                </span>
+                            </div>
+
+                            <div
+                                id="currencyRiskNote"
+                                class="component-note"
+                            >
+                                -
+                            </div>
                         </div>
                     </div>
 
@@ -623,6 +549,22 @@
                                     style="width: 0%"
                                 ></div>
                             </div>
+
+                            <div class="mt-2">
+                                <span
+                                    id="newsRiskStatus"
+                                    class="component-availability-badge component-unavailable"
+                                >
+                                    -
+                                </span>
+                            </div>
+
+                            <div
+                                id="newsRiskNote"
+                                class="component-note"
+                            >
+                                -
+                            </div>
                         </div>
                     </div>
 
@@ -645,6 +587,22 @@
                                     class="progress-bar"
                                     style="width: 0%"
                                 ></div>
+                            </div>
+
+                            <div class="mt-2">
+                                <span
+                                    id="portRiskStatus"
+                                    class="component-availability-badge component-unavailable"
+                                >
+                                    -
+                                </span>
+                            </div>
+
+                            <div
+                                id="portRiskNote"
+                                class="component-note"
+                            >
+                                -
                             </div>
                         </div>
                     </div>
@@ -711,7 +669,20 @@
                                 -
                             </p>
 
-                            <div class="chart-container">
+                            <div
+                                id="currencyChartEmpty"
+                                class="alert alert-light border text-muted d-none mb-0"
+                            >
+                                {{ app()->getLocale() === 'id'
+                                    ? 'Riwayat nilai tukar belum tersedia.'
+                                    : 'Exchange-rate history is not available yet.'
+                                }}
+                            </div>
+
+                            <div
+                                id="currencyChartContainer"
+                                class="chart-container"
+                            >
                                 <canvas id="currencyTrendChart"></canvas>
                             </div>
                         </div>
@@ -764,7 +735,26 @@
             </section>
         </div>
     </div>
+    </div>
 </main>
+
+
+<footer class="sg-footer">
+    <div class="container-xxl">
+        <div class="sg-footer-inner">
+            <div>
+                <strong class="text-dark">SupplyGuard</strong>
+                <span class="ms-2">
+                    {{ app()->getLocale() === 'id'
+                        ? 'Platform intelijen risiko rantai pasok global.'
+                        : 'Global supply-chain risk intelligence platform.'
+                    }}
+                </span>
+            </div>
+            <div>© {{ date('Y') }} SupplyGuard</div>
+        </div>
+    </div>
+</footer>
 
 <!-- Leaflet JavaScript -->
 <script
@@ -809,7 +799,39 @@
 
         exchangeRate: currentLocale === 'id'
             ? 'Kurs ke IDR'
-            : 'Exchange to IDR'
+            : 'Exchange to IDR',
+
+        dataReady: currentLocale === 'id'
+            ? 'Data Lengkap'
+            : 'Complete Data',
+
+        dataPartial: currentLocale === 'id'
+            ? 'Data Parsial'
+            : 'Partial Data',
+
+        dataUnavailable: currentLocale === 'id'
+            ? 'Data Belum Tersedia'
+            : 'Data Unavailable',
+
+        componentAvailable: currentLocale === 'id'
+            ? 'Tersedia'
+            : 'Available',
+
+        componentUnavailable: currentLocale === 'id'
+            ? 'Tidak tersedia'
+            : 'Unavailable',
+
+        partialWarning: currentLocale === 'id'
+            ? 'Skor bersifat sementara karena belum semua komponen memiliki data.'
+            : 'This score is provisional because not all components have data.',
+
+        readyMessage: currentLocale === 'id'
+            ? 'Seluruh komponen risiko memiliki data yang dapat dinilai.'
+            : 'All risk components have assessable data.',
+
+        unavailableMessage: currentLocale === 'id'
+            ? 'Belum ada komponen yang cukup untuk menghasilkan skor risiko yang dapat digunakan.'
+            : 'There are not enough components to produce a usable risk score.'
     };
 
     document.addEventListener('DOMContentLoaded', function () {
@@ -891,9 +913,12 @@
                 fetch(`/api/risk?country_id=${countryId}`, {
                     headers: { 'Accept': 'application/json' }
                 }),
-                fetch(`/api/ports?country_id=${countryId}`, {
-                    headers: { 'Accept': 'application/json' }
-                })
+                fetch(
+                    `/api/ports?country_id=${countryId}&has_coordinates=1&per_page=100`,
+                    {
+                        headers: { 'Accept': 'application/json' }
+                    }
+                )
             ]);
 
             const [
@@ -925,8 +950,10 @@
             const ports = portResult.data;
 
             renderCountrySummary(country, currency, risk);
+            renderDataQuality(risk, country);
             renderRiskRecommendation(country, risk);
-            renderRiskComponents(risk.components);
+            renderDelayPrediction(risk);
+            renderRiskComponents(risk);
 
             document
                 .getElementById('visualizationSection')
@@ -936,7 +963,7 @@
                 .getElementById('portSection')
                 .classList.remove('d-none');
 
-            renderRiskComponentChart(risk.components);
+            renderRiskComponentChart(risk);
 
             renderCurrencyTrendChart(
                 currency.trend,
@@ -959,18 +986,97 @@
             formatNumber(country.gdp_usd_billion);
 
         document.getElementById('inflationValue').textContent =
-            formatNumber(country.inflation_rate) + '%';
+            country.inflation_rate === null ||
+            country.inflation_rate === undefined
+                ? '-'
+                : formatNumber(country.inflation_rate) + '%';
 
         document.getElementById('currencyValue').textContent =
             currency.currency_code || '-';
 
         document.getElementById('currencyDetail').textContent =
-            text.exchangeRate + ': ' + formatNumber(currency.exchange_rate_to_idr);
+            text.exchangeRate + ': ' +
+            formatNumber(currency.exchange_rate_to_idr);
 
         document.getElementById('riskScoreValue').textContent =
-            risk.total_score + '/100';
+            Number.isFinite(Number(risk.total_score))
+                ? Number(risk.total_score) + '/100'
+                : '-';
 
-        setRiskLabel(risk.risk_label, risk.total_score);
+        setRiskLabel(
+            risk.risk_label || '-',
+            Number(risk.total_score) || 0
+        );
+    }
+
+    function renderDataQuality(risk, country) {
+        const completeness = Math.max(
+            0,
+            Math.min(
+                100,
+                Number(
+                    risk.data_completeness_percent
+                    ?? risk.data_completeness
+                    ?? country.data_completeness_percent
+                    ?? 0
+                ) || 0
+            )
+        );
+
+        const status = String(
+            risk.risk_data_status
+            ?? risk.data_status
+            ?? country.risk_data_status
+            ?? (
+                completeness >= 100
+                    ? 'ready'
+                    : completeness > 0
+                        ? 'partial'
+                        : 'unavailable'
+            )
+        ).toLowerCase();
+
+        const panel = document.getElementById('dataQualityPanel');
+        const badge = document.getElementById('dataQualityBadge');
+        const metricBadge =
+            document.getElementById('dataCompletenessStatus');
+
+        let label = text.dataUnavailable;
+        let message = text.unavailableMessage;
+        let badgeClass = 'quality-unavailable';
+        let panelClass = 'data-quality-unavailable';
+
+        if (status === 'ready') {
+            label = text.dataReady;
+            message = text.readyMessage;
+            badgeClass = 'quality-ready';
+            panelClass = 'data-quality-ready';
+        } else if (status === 'partial') {
+            label = text.dataPartial;
+            message = text.partialWarning;
+            badgeClass = 'quality-partial';
+            panelClass = 'data-quality-partial';
+        }
+
+        document.getElementById('dataCompletenessValue').textContent =
+            completeness + '%';
+
+        document.getElementById('dataQualityPercent').textContent =
+            completeness + '%';
+
+        document.getElementById('dataQualityMessage').textContent =
+            message;
+
+        [badge, metricBadge].forEach(function (element) {
+            element.textContent = label;
+            element.className =
+                'quality-badge ' + badgeClass;
+        });
+
+        panel.className =
+            'data-quality-panel mt-4 ' + panelClass;
+
+        panel.classList.remove('d-none');
     }
 
     function renderRiskRecommendation(country, risk) {
@@ -986,79 +1092,254 @@
         recommendationBox.classList.remove('d-none');
     }
 
-    function renderRiskComponents(components) {
-        if (!components) {
+    function renderDelayPrediction(risk) {
+        const prediction = risk.delay_prediction;
+        const box = document.getElementById('delayPredictionBox');
+
+        if (!prediction) {
+            box.classList.add('d-none');
             return;
         }
 
-        updateRiskComponent(
-            'weatherRiskValue',
-            'weatherRiskBar',
-            components.weather_risk?.score ?? 0
+        const range = `${prediction.minimum_delay_days}-${prediction.maximum_delay_days}`;
+        document.getElementById('delayPredictionDays').textContent =
+            `${range} ${currentLocale === 'id' ? 'hari' : 'days'}`;
+
+        document.getElementById('delayPredictionSummary').textContent =
+            currentLocale === 'id'
+                ? `Estimasi utama ${prediction.expected_delay_days} hari, berdasarkan ${prediction.port_sample_size} data pelabuhan dan tekanan risiko saat ini.`
+                : `Central estimate ${prediction.expected_delay_days} days, based on ${prediction.port_sample_size} port records and current risk pressure.`;
+
+        const factors = (prediction.dominant_factors || [])
+            .map(item => `${item.label} (${item.score})`)
+            .join(', ');
+        document.getElementById('delayPredictionFactors').textContent =
+            `${currentLocale === 'id' ? 'Faktor dominan' : 'Dominant factors'}: ${factors || '-'}`;
+
+        const confidence = document.getElementById('delayPredictionConfidence');
+        confidence.textContent = `${currentLocale === 'id' ? 'Keyakinan' : 'Confidence'} ${prediction.confidence_percent}%`;
+        confidence.className = 'quality-badge ' + (
+            prediction.confidence_percent >= 75
+                ? 'quality-ready'
+                : prediction.confidence_percent >= 50
+                    ? 'quality-partial'
+                    : 'quality-unavailable'
         );
 
-        updateRiskComponent(
-            'inflationRiskValue',
-            'inflationRiskBar',
-            components.inflation_risk?.score ?? 0
-        );
+        box.classList.remove('d-none');
+    }
 
-        updateRiskComponent(
-            'currencyRiskValue',
-            'currencyRiskBar',
-            components.currency_risk?.score ?? 0
-        );
+    function renderRiskComponents(risk) {
+        const components = risk.components || {};
 
-        updateRiskComponent(
-            'newsRiskValue',
-            'newsRiskBar',
-            components.news_risk?.score ?? 0
-        );
+        const definitions = [
+            {
+                key: 'weather_risk',
+                valueId: 'weatherRiskValue',
+                barId: 'weatherRiskBar',
+                statusId: 'weatherRiskStatus',
+                noteId: 'weatherRiskNote'
+            },
+            {
+                key: 'inflation_risk',
+                valueId: 'inflationRiskValue',
+                barId: 'inflationRiskBar',
+                statusId: 'inflationRiskStatus',
+                noteId: 'inflationRiskNote'
+            },
+            {
+                key: 'currency_risk',
+                valueId: 'currencyRiskValue',
+                barId: 'currencyRiskBar',
+                statusId: 'currencyRiskStatus',
+                noteId: 'currencyRiskNote'
+            },
+            {
+                key: 'news_risk',
+                valueId: 'newsRiskValue',
+                barId: 'newsRiskBar',
+                statusId: 'newsRiskStatus',
+                noteId: 'newsRiskNote'
+            },
+            {
+                key: 'port_risk',
+                valueId: 'portRiskValue',
+                barId: 'portRiskBar',
+                statusId: 'portRiskStatus',
+                noteId: 'portRiskNote'
+            }
+        ];
 
-        updateRiskComponent(
-            'portRiskValue',
-            'portRiskBar',
-            components.port_risk?.score ?? 0
-        );
+        definitions.forEach(function (definition) {
+            updateRiskComponent(
+                definition,
+                getComponentScore(components, definition.key),
+                getComponentAvailability(risk, definition.key),
+                getComponentNote(risk, definition.key)
+            );
+        });
 
         document
             .getElementById('riskComponentSection')
             .classList.remove('d-none');
     }
 
-    function updateRiskComponent(valueElementId, barElementId, value) {
+    function updateRiskComponent(
+        definition,
+        value,
+        available,
+        note
+    ) {
+        const valueElement =
+            document.getElementById(definition.valueId);
+
+        const barElement =
+            document.getElementById(definition.barId);
+
+        const statusElement =
+            document.getElementById(definition.statusId);
+
+        const noteElement =
+            document.getElementById(definition.noteId);
+
+        if (!available) {
+            valueElement.textContent = 'N/A';
+            valueElement.classList.add('text-muted');
+
+            barElement.style.width = '0%';
+            barElement.className =
+                'progress-bar bg-secondary';
+
+            statusElement.textContent =
+                text.componentUnavailable;
+
+            statusElement.className =
+                'component-availability-badge component-unavailable';
+
+            noteElement.textContent =
+                note || text.componentUnavailable;
+
+            return;
+        }
+
         const normalizedValue = Math.max(
             0,
             Math.min(100, Number(value) || 0)
         );
 
-        const valueElement = document.getElementById(valueElementId);
-        const barElement = document.getElementById(barElementId);
+        valueElement.textContent =
+            normalizedValue + '/100';
 
-        valueElement.textContent = normalizedValue + '/100';
-        barElement.style.width = normalizedValue + '%';
+        valueElement.classList.remove('text-muted');
+
+        barElement.style.width =
+            normalizedValue + '%';
+
         barElement.className =
-            'progress-bar ' + getProgressColor(normalizedValue);
+            'progress-bar ' +
+            getProgressColor(normalizedValue);
+
+        statusElement.textContent =
+            text.componentAvailable;
+
+        statusElement.className =
+            'component-availability-badge component-available';
+
+        noteElement.textContent =
+            note || text.componentAvailable;
     }
 
-    function renderRiskComponentChart(components) {
-        const chartElement = document.getElementById('riskComponentChart');
+    function getComponentScore(components, key) {
+        const component = components?.[key];
 
-        if (!chartElement || !components) {
+        if (
+            component !== null
+            && typeof component === 'object'
+        ) {
+            return Number(component.score) || 0;
+        }
+
+        return Number(component) || 0;
+    }
+
+    function getComponentAvailability(risk, key) {
+        if (
+            risk.component_availability
+            && Object.prototype.hasOwnProperty.call(
+                risk.component_availability,
+                key
+            )
+        ) {
+            return Boolean(
+                risk.component_availability[key]
+            );
+        }
+
+        const component = risk.components?.[key];
+
+        if (
+            component !== null
+            && typeof component === 'object'
+            && Object.prototype.hasOwnProperty.call(
+                component,
+                'available'
+            )
+        ) {
+            return Boolean(component.available);
+        }
+
+        return component !== null
+            && component !== undefined;
+    }
+
+    function getComponentNote(risk, key) {
+        if (
+            risk.component_notes
+            && risk.component_notes[key]
+        ) {
+            return risk.component_notes[key];
+        }
+
+        const component = risk.components?.[key];
+
+        if (
+            component !== null
+            && typeof component === 'object'
+            && component.note
+        ) {
+            return component.note;
+        }
+
+        return '';
+    }
+
+    function renderRiskComponentChart(risk) {
+        const chartElement =
+            document.getElementById('riskComponentChart');
+
+        const components = risk.components || {};
+
+        if (!chartElement) {
             return;
         }
+
+        const keys = [
+            'weather_risk',
+            'inflation_risk',
+            'currency_risk',
+            'news_risk',
+            'port_risk'
+        ];
 
         const labels = currentLocale === 'id'
             ? ['Cuaca', 'Inflasi', 'Mata Uang', 'Berita', 'Pelabuhan']
             : ['Weather', 'Inflation', 'Currency', 'News', 'Port'];
 
-        const values = [
-            components.weather_risk?.score ?? 0,
-            components.inflation_risk?.score ?? 0,
-            components.currency_risk?.score ?? 0,
-            components.news_risk?.score ?? 0,
-            components.port_risk?.score ?? 0
-        ];
+        const values = keys.map(function (key) {
+            return getComponentAvailability(risk, key)
+                ? getComponentScore(components, key)
+                : null;
+        });
 
         if (riskComponentChartInstance) {
             riskComponentChartInstance.destroy();
@@ -1103,7 +1384,9 @@
                     tooltip: {
                         callbacks: {
                             label: function (context) {
-                                return context.raw + '/100';
+                                return context.raw === null
+                                    ? text.componentUnavailable
+                                    : context.raw + '/100';
                             }
                         }
                     }
@@ -1127,28 +1410,88 @@
     }
 
     function renderCurrencyTrendChart(trend, currencyCode, countryName) {
-        const chartElement = document.getElementById('currencyTrendChart');
+        const chartElement =
+            document.getElementById('currencyTrendChart');
 
-        if (!chartElement || !Array.isArray(trend)) {
+        const chartContainer =
+            document.getElementById('currencyChartContainer');
+
+        const emptyState =
+            document.getElementById('currencyChartEmpty');
+
+        const description =
+            document.getElementById('currencyChartDescription');
+
+        const safeTrend = Array.isArray(trend)
+            ? trend.filter(function (item) {
+                return item
+                    && item.rate !== null
+                    && item.rate !== undefined
+                    && Number.isFinite(Number(item.rate));
+            })
+            : [];
+
+        if (
+            !chartElement
+            || !chartContainer
+            || !emptyState
+            || !description
+        ) {
             return;
         }
 
-        const labels = trend.map(function (item) {
-            return item.month;
+        if (currencyTrendChartInstance) {
+            currencyTrendChartInstance.destroy();
+            currencyTrendChartInstance = null;
+        }
+
+        if (safeTrend.length === 0) {
+            chartContainer.classList.add('d-none');
+            emptyState.classList.remove('d-none');
+
+            if (String(currencyCode || '').toUpperCase() === 'IDR') {
+                description.textContent =
+                    currentLocale === 'id'
+                        ? 'IDR merupakan mata uang acuan, sehingga tidak memiliki perubahan terhadap IDR.'
+                        : 'IDR is the reference currency, so it has no movement against IDR.';
+
+                emptyState.textContent =
+                    currentLocale === 'id'
+                        ? 'Tidak ada grafik perubahan karena pasangan IDR/IDR selalu bernilai 1.'
+                        : 'No movement chart is shown because the IDR/IDR pair is always equal to 1.';
+            } else {
+                description.textContent =
+                    currentLocale === 'id'
+                        ? `Riwayat ${currencyCode || '-'} terhadap IDR untuk ${countryName} belum tersedia.`
+                        : `${currencyCode || '-'} exchange-rate history against IDR for ${countryName} is not available yet.`;
+
+                emptyState.textContent =
+                    currentLocale === 'id'
+                        ? 'Data tren nilai tukar belum tersedia.'
+                        : 'Exchange-rate trend data is not available yet.';
+            }
+
+            return;
+        }
+
+        chartContainer.classList.remove('d-none');
+        emptyState.classList.add('d-none');
+
+        const labels = safeTrend.map(function (item) {
+            return item.month
+                ?? item.date
+                ?? item.rate_date
+                ?? '-';
         });
 
-        const values = trend.map(function (item) {
+        const values = safeTrend.map(function (item) {
             return Number(item.rate);
         });
 
-        document.getElementById('currencyChartDescription').textContent =
+        description.textContent =
             currentLocale === 'id'
                 ? `Perubahan ${currencyCode} terhadap IDR untuk ${countryName}.`
                 : `${currencyCode} exchange movement against IDR for ${countryName}.`;
-
-        if (currencyTrendChartInstance) {
-            currencyTrendChartInstance.destroy();
-        }
 
         currencyTrendChartInstance = new Chart(chartElement, {
             type: 'line',
@@ -1200,7 +1543,9 @@
     }
 
     function renderPortMap(ports, country) {
-        const mapElement = document.getElementById('portMap');
+        const mapElement =
+            document.getElementById('portMap');
+
         const informationList =
             document.getElementById('portInformationList');
 
@@ -1221,7 +1566,8 @@
                 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
                 {
                     maxZoom: 19,
-                    attribution: '&copy; OpenStreetMap contributors'
+                    attribution:
+                        '&copy; OpenStreetMap contributors'
                 }
             ).addTo(portMapInstance);
 
@@ -1237,8 +1583,8 @@
                 <div class="alert alert-warning mb-0">
                     ${
                         currentLocale === 'id'
-                            ? 'Belum ada data pelabuhan untuk negara ini.'
-                            : 'No port data is available for this country.'
+                            ? 'Belum ada pelabuhan dengan koordinat untuk negara ini.'
+                            : 'No ports with coordinates are available for this country.'
                     }
                 </div>
             `;
@@ -1265,8 +1611,8 @@
             const longitude = Number(port.longitude);
 
             if (
-                !Number.isFinite(latitude) ||
-                !Number.isFinite(longitude)
+                !Number.isFinite(latitude)
+                || !Number.isFinite(longitude)
             ) {
                 return;
             }
@@ -1274,12 +1620,28 @@
             coordinates.push([latitude, longitude]);
 
             const translatedStatus =
-                translateCongestionLevel(port.congestion_level);
+                translateCongestionLevel(
+                    port.congestion_level
+                );
 
-            const marker = L.marker([latitude, longitude]);
+            const delayText =
+                port.delay_days === null
+                || port.delay_days === undefined
+                    ? text.componentUnavailable
+                    : `${Number(port.delay_days)} ${
+                        currentLocale === 'id'
+                            ? 'hari'
+                            : 'days'
+                    }`;
+
+            const marker =
+                L.marker([latitude, longitude]);
 
             marker.bindPopup(`
                 <strong>${escapeHtml(port.name)}</strong>
+                <br>
+                UN/LOCODE:
+                ${escapeHtml(port.unlocode || '-')}
                 <br>
                 ${currentLocale === 'id' ? 'Kota' : 'City'}:
                 ${escapeHtml(port.city || '-')}
@@ -1288,8 +1650,7 @@
                 ${escapeHtml(translatedStatus)}
                 <br>
                 ${currentLocale === 'id' ? 'Keterlambatan' : 'Delay'}:
-                ${Number(port.delay_days) || 0}
-                ${currentLocale === 'id' ? 'hari' : 'days'}
+                ${escapeHtml(delayText)}
             `);
 
             marker.addTo(portMarkerGroup);
@@ -1304,9 +1665,13 @@
                                     ${escapeHtml(port.name)}
                                 </h6>
 
-                                <p class="text-muted small mb-2">
+                                <p class="text-muted small mb-1">
                                     ${escapeHtml(port.city || '-')}
                                 </p>
+
+                                <code class="small">
+                                    ${escapeHtml(port.unlocode || '-')}
+                                </code>
                             </div>
 
                             <span class="port-status-badge ${getPortStatusClass(port.congestion_level)}">
@@ -1314,26 +1679,45 @@
                             </span>
                         </div>
 
-                        <small class="text-muted">
+                        <small class="text-muted d-block mt-2">
                             ${
                                 currentLocale === 'id'
                                     ? 'Perkiraan keterlambatan'
                                     : 'Estimated delay'
                             }:
-                            ${Number(port.delay_days) || 0}
-                            ${currentLocale === 'id' ? 'hari' : 'days'}
+                            ${escapeHtml(delayText)}
                         </small>
+
+                        ${
+                            port.data_status === 'reference_only'
+                                ? `
+                                    <small class="text-muted d-block mt-1">
+                                        ${
+                                            currentLocale === 'id'
+                                                ? 'Data referensi lokasi; kondisi operasional belum tersedia.'
+                                                : 'Location reference data; operational conditions are unavailable.'
+                                        }
+                                    </small>
+                                `
+                                : ''
+                        }
                     </div>
                 `
             );
         });
 
         if (coordinates.length === 1) {
-            portMapInstance.setView(coordinates[0], 7);
+            portMapInstance.setView(
+                coordinates[0],
+                7
+            );
         } else if (coordinates.length > 1) {
-            portMapInstance.fitBounds(coordinates, {
-                padding: [35, 35]
-            });
+            portMapInstance.fitBounds(
+                coordinates,
+                {
+                    padding: [35, 35]
+                }
+            );
         }
 
         setTimeout(function () {
@@ -1386,21 +1770,36 @@
             return 'port-status-medium';
         }
 
-        return 'port-status-low';
+        if (normalizedLevel === 'low') {
+            return 'port-status-low';
+        }
+
+        return 'port-status-unavailable';
     }
 
     function translateCongestionLevel(level) {
+        const normalizedLevel =
+            String(level || '').toLowerCase();
+
         if (currentLocale !== 'id') {
-            return level || '-';
+            const translations = {
+                low: 'Low',
+                medium: 'Medium',
+                high: 'High'
+            };
+
+            return translations[normalizedLevel]
+                || text.componentUnavailable;
         }
 
         const translations = {
-            Low: 'Rendah',
-            Medium: 'Sedang',
-            High: 'Tinggi'
+            low: 'Rendah',
+            medium: 'Sedang',
+            high: 'Tinggi'
         };
 
-        return translations[level] || level || '-';
+        return translations[normalizedLevel]
+            || text.componentUnavailable;
     }
 
     function translateRiskLabel(label) {
@@ -1487,5 +1886,6 @@
 <script
     src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"
 ></script>
+@include('user.partials.automatic-translation')
 </body>
 </html>

@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class RiskScore extends Model
 {
@@ -18,7 +19,19 @@ class RiskScore extends Model
         'recommendation',
     ];
 
-    public function country()
+    protected function casts(): array
+    {
+        return [
+            'weather_risk' => 'integer',
+            'inflation_risk' => 'integer',
+            'currency_risk' => 'integer',
+            'news_risk' => 'integer',
+            'port_risk' => 'integer',
+            'total_score' => 'integer',
+        ];
+    }
+
+    public function country(): BelongsTo
     {
         return $this->belongsTo(Country::class);
     }
