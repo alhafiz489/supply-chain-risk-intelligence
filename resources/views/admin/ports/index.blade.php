@@ -14,10 +14,11 @@
         href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
         rel="stylesheet"
     >
+    <link rel="stylesheet" href="{{ asset('css/supplyguard-professional.css') }}">
 
     <style>
         :root {
-            --sidebar-width: 270px;
+            --sidebar-width: 284px;
             --muted: #64748b;
             --page-background: #f4f7fb;
         }

@@ -113,6 +113,11 @@ class CoreProjectFeaturesTest extends TestCase
         $this->actingAs($admin)
             ->get('/admin/dashboard')
             ->assertOk();
+
+        $this->actingAs($admin)
+            ->get('/admin/ports')
+            ->assertOk()
+            ->assertSee('css/supplyguard-professional.css');
     }
 
     private function country(): Country
