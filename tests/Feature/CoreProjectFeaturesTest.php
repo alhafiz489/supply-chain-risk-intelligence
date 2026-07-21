@@ -122,6 +122,36 @@ class CoreProjectFeaturesTest extends TestCase
             ->assertSee('css/supplyguard-professional.css');
     }
 
+    public function test_admin_login_only_accepts_active_administrator(): void
+    {
+        User::factory()->create([
+            'email' => 'user@example.com',
+            'password' => 'password',
+            'role' => 'user',
+            'status' => 'active',
+        ]);
+        User::factory()->create([
+            'email' => 'admin@example.com',
+            'password' => 'password',
+            'role' => 'admin',
+            'status' => 'active',
+        ]);
+
+        $this->get('/admin/login')
+            ->assertOk()
+            ->assertSee('Administrator Login');
+
+        $this->post('/admin/login', [
+            'email' => 'user@example.com',
+            'password' => 'password',
+        ])->assertSessionHasErrors('email');
+
+        $this->post('/admin/login', [
+            'email' => 'admin@example.com',
+            'password' => 'password',
+        ])->assertRedirect(route('admin.dashboard'));
+    }
+
     public function test_system_overview_displays_live_project_evidence(): void
     {
         $country = $this->country();
@@ -142,7 +172,8 @@ class CoreProjectFeaturesTest extends TestCase
             'is_active' => true,
         ]);
 
-        $this->get('/system-overview')
+        $this->actingAs(User::factory()->create())
+            ->get('/system-overview')
             ->assertOk()
             ->assertSee('SupplyGuard System Coverage')
             ->assertSee('REST Countries')
@@ -154,7 +185,8 @@ class CoreProjectFeaturesTest extends TestCase
 
     public function test_dashboard_contains_distinct_interactive_country_and_port_markers(): void
     {
-        $this->get('/')
+        $this->actingAs(User::factory()->create())
+            ->get('/')
             ->assertOk()
             ->assertSee('map-legend-country')
             ->assertSee('map-legend-port')
@@ -223,7 +255,8 @@ class CoreProjectFeaturesTest extends TestCase
             'published_at' => now(),
         ]);
 
-        $this->get('/news?search=shipping&sentiment=Positive')
+        $this->actingAs(User::factory()->create())
+            ->get('/news?search=shipping&sentiment=Positive')
             ->assertOk()
             ->assertSee('Global Supply Chain News')
             ->assertSee('Global shipping activity improves')
@@ -262,7 +295,8 @@ class CoreProjectFeaturesTest extends TestCase
             'url' => 'https://example.com/article',
         ]);
 
-        $this->get('/data/countries?search=Indonesia&region=Asia')
+        $this->actingAs(User::factory()->create())
+            ->get('/data/countries?search=Indonesia&region=Asia')
             ->assertOk()->assertSee('Indonesia')->assertSee('Detail');
         $this->get(route('data.countries.show', $country))
             ->assertOk()->assertSee('Identity & Geography', false)->assertSee('Jakarta');
@@ -298,6 +332,8 @@ class CoreProjectFeaturesTest extends TestCase
     public function test_guests_cannot_mutate_watchlist_or_open_admin_area(): void
     {
         $country = $this->country();
+        $this->get('/')->assertRedirect(route('login'));
+        $this->get('/dashboard')->assertRedirect(route('login'));
         $this->postJson('/watchlist', ['country_id' => $country->id])
             ->assertUnauthorized();
         $this->get('/admin/dashboard')->assertRedirect(route('login'));

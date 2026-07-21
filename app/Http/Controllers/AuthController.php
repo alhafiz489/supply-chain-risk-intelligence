@@ -17,6 +17,11 @@ class AuthController extends Controller
         return view('auth.login');
     }
 
+    public function showAdminLogin(): View
+    {
+        return view('auth.login', ['adminMode' => true]);
+    }
+
     public function login(Request $request): RedirectResponse
     {
         $credentials = $request->validate([
@@ -44,6 +49,33 @@ class AuthController extends Controller
         return redirect()
             ->intended(route('dashboard'))
             ->with('success', 'Login berhasil.');
+    }
+
+    public function adminLogin(Request $request): RedirectResponse
+    {
+        $credentials = $request->validate([
+            'email' => ['required', 'email'],
+            'password' => ['required', 'string'],
+        ]);
+
+        if (! Auth::attempt([
+            'email' => $credentials['email'],
+            'password' => $credentials['password'],
+            'role' => 'admin',
+            'status' => 'active',
+        ], $request->boolean('remember'))) {
+            return back()
+                ->withErrors([
+                    'email' => 'Kredensial administrator tidak valid atau akun tidak aktif.',
+                ])
+                ->onlyInput('email');
+        }
+
+        $request->session()->regenerate();
+
+        return redirect()
+            ->intended(route('admin.dashboard'))
+            ->with('success', 'Login administrator berhasil.');
     }
 
     public function showRegister(): View
@@ -103,7 +135,7 @@ class AuthController extends Controller
         $request->session()->regenerateToken();
 
         return redirect()
-            ->route('dashboard')
+            ->route('login')
             ->with('success', 'Anda berhasil keluar.');
     }
 }

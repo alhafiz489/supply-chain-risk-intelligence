@@ -1,13 +1,11 @@
 <!DOCTYPE html>
+@php($adminMode = $adminMode ?? false)
 <html lang="{{ app()->getLocale() }}">
 <head>
     <meta charset="UTF-8">
 
     <title>
-        {{ app()->getLocale() === 'id'
-            ? 'Login - SupplyGuard'
-            : 'Login - SupplyGuard'
-        }}
+        {{ $adminMode ? 'Admin Login - SupplyGuard' : 'Login - SupplyGuard' }}
     </title>
 
     <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -95,17 +93,22 @@
             </a>
 
             <h1 class="h3 fw-bold mb-2">
-                {{ app()->getLocale() === 'id'
-                    ? 'Masuk ke Akun'
-                    : 'Sign In'
-                }}
+                @if ($adminMode)
+                    Administrator Login
+                @else
+                    {{ app()->getLocale() === 'id' ? 'Masuk ke Akun' : 'Sign In' }}
+                @endif
             </h1>
 
             <p class="text-muted mb-4">
-                {{ app()->getLocale() === 'id'
-                    ? 'Masuk untuk mengelola daftar pemantauan negara.'
-                    : 'Sign in to manage your country monitoring list.'
-                }}
+                @if ($adminMode)
+                    Masuk menggunakan akun administrator SupplyGuard.
+                @else
+                    {{ app()->getLocale() === 'id'
+                        ? 'Masuk untuk mengelola daftar pemantauan negara.'
+                        : 'Sign in to manage your country monitoring list.'
+                    }}
+                @endif
             </p>
 
             @if (session('success'))
@@ -122,7 +125,7 @@
 
             <form
                 method="POST"
-                action="{{ route('auth.login') }}"
+                action="{{ $adminMode ? route('admin.authenticate') : route('auth.login') }}"
             >
                 @csrf
 
@@ -197,6 +200,7 @@
                 </button>
             </form>
 
+            @if (! $adminMode)
             <p class="text-center text-muted mt-4 mb-0">
                 {{ app()->getLocale() === 'id'
                     ? 'Belum memiliki akun?'
@@ -213,6 +217,13 @@
                     }}
                 </a>
             </p>
+            @else
+            <p class="text-center mt-4 mb-0">
+                <a href="{{ route('login') }}" class="fw-semibold text-decoration-none">
+                    Kembali ke login pengguna
+                </a>
+            </p>
+            @endif
 
         </div>
     </div>

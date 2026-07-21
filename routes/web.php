@@ -17,33 +17,33 @@ use App\Http\Controllers\DataCatalogController;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Session;
 
-Route::get('/', function () {
-    return view('dashboard');
-})->name('dashboard');
-
-Route::get('/dashboard', function () {
-    return view('dashboard');
-})->name('dashboard.page');
-
-Route::get('/country-comparison', function () {
-    return view('country-comparison');
-})->name('country.comparison');
-
-Route::get('/system-overview', SystemOverviewController::class)
-    ->name('system.overview');
-
-Route::get('/news', NewsPageController::class)
-    ->name('news.index');
-
-Route::get('/data/countries', [DataCatalogController::class, 'countries'])->name('data.countries');
-Route::get('/data/ports', [DataCatalogController::class, 'ports'])->name('data.ports');
-Route::get('/data/sentiments', [DataCatalogController::class, 'sentiments'])->name('data.sentiments');
-Route::get('/data/countries/{country}', [DataCatalogController::class, 'country'])->name('data.countries.show');
-Route::get('/data/ports/{port}', [DataCatalogController::class, 'port'])->name('data.ports.show');
-Route::get('/data/sentiments/{sentimentWord}', [DataCatalogController::class, 'sentiment'])->name('data.sentiments.show');
-Route::get('/news/{newsCache}', [DataCatalogController::class, 'news'])->name('news.show');
-
 Route::middleware('auth')->group(function () {
+    Route::get('/', function () {
+        return view('dashboard');
+    })->name('dashboard');
+
+    Route::get('/dashboard', function () {
+        return view('dashboard');
+    })->name('dashboard.page');
+
+    Route::get('/country-comparison', function () {
+        return view('country-comparison');
+    })->name('country.comparison');
+
+    Route::get('/system-overview', SystemOverviewController::class)
+        ->name('system.overview');
+
+    Route::get('/news', NewsPageController::class)
+        ->name('news.index');
+
+    Route::get('/data/countries', [DataCatalogController::class, 'countries'])->name('data.countries');
+    Route::get('/data/ports', [DataCatalogController::class, 'ports'])->name('data.ports');
+    Route::get('/data/sentiments', [DataCatalogController::class, 'sentiments'])->name('data.sentiments');
+    Route::get('/data/countries/{country}', [DataCatalogController::class, 'country'])->name('data.countries.show');
+    Route::get('/data/ports/{port}', [DataCatalogController::class, 'port'])->name('data.ports.show');
+    Route::get('/data/sentiments/{sentimentWord}', [DataCatalogController::class, 'sentiment'])->name('data.sentiments.show');
+    Route::get('/news/{newsCache}', [DataCatalogController::class, 'news'])->name('news.show');
+
     Route::get('/watchlist', function () {
         return view('watchlist');
     })->name('watchlist.index');
@@ -76,6 +76,12 @@ Route::middleware('guest')->group(function () {
 
     Route::post('/register', [AuthController::class, 'register'])
         ->name('auth.register');
+
+    Route::get('/admin/login', [AuthController::class, 'showAdminLogin'])
+        ->name('admin.login');
+
+    Route::post('/admin/login', [AuthController::class, 'adminLogin'])
+        ->name('admin.authenticate');
 });
 
 Route::post('/logout', [AuthController::class, 'logout'])
