@@ -10,6 +10,8 @@ use Throwable;
 
 class LogApiRequest
 {
+    private const MAX_RESPONSE_BYTES = 20000;
+
     public function handle(Request $request, Closure $next): Response
     {
         $startedAt = microtime(true);
@@ -59,6 +61,19 @@ class LogApiRequest
 
         if ($content === '') {
             return null;
+        }
+
+        if (strlen($content) > self::MAX_RESPONSE_BYTES) {
+            $decoded = json_decode($content, true);
+
+            return [
+                '_truncated' => true,
+                '_size_bytes' => strlen($content),
+                '_top_level_keys' => is_array($decoded)
+                    ? array_slice(array_keys($decoded), 0, 20)
+                    : [],
+                '_message' => 'Response omitted to protect database storage.',
+            ];
         }
 
         $decoded = json_decode($content, true);
