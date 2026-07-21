@@ -136,6 +136,19 @@ curl.exe http://127.0.0.1:5000/languages
 | GET | `/api/ports?country_id={id}` | Pelabuhan negara |
 | GET | `/api/risk?country_id={id}` | Skor risiko dan prediksi keterlambatan |
 
+## Halaman data pengguna
+
+| Halaman | Fungsi |
+|---|---|
+| `/data/countries` | Daftar, pencarian, filter wilayah, dan detail negara |
+| `/data/ports` | Daftar, pencarian, filter negara, dan detail pelabuhan |
+| `/data/sentiments` | Kamus sentimen, bobot, status, dan detail kata |
+| `/news` | Feed berita, filter negara/sentimen, dan detail analisis |
+
+Semua halaman tersebut membaca record database aplikasi dan menyediakan tombol
+Detail. Data referensi yang belum memiliki kondisi operasional ditandai sebagai
+`Unavailable` agar tidak disalahartikan sebagai kondisi aman.
+
 Semua permintaan API dicatat oleh middleware log untuk membantu audit sumber
 data dan diagnosis kegagalan.
 
@@ -146,7 +159,14 @@ php artisan test
 ```
 
 Test suite mencakup risk API dan prediksi keterlambatan, algoritma prediksi,
-watchlist pengguna, pembatasan admin, serta integrasi penerjemahan.
+watchlist pengguna, pembatasan admin, katalog dan detail data, validasi input,
+global map, News, serta integrasi dan fallback penerjemahan.
+
+Sebelum presentasi, hasil yang diharapkan adalah seluruh test berstatus lulus:
+
+```powershell
+php vendor\phpunit\phpunit\phpunit --colors=never --do-not-cache-result
+```
 
 ## Struktur penting
 
@@ -171,3 +191,6 @@ watchlist pengguna, pembatasan admin, serta integrasi penerjemahan.
 
 Jangan commit `.env`, API key, password database, atau kredensial akun demo.
 Gunakan `.env.example` hanya sebagai daftar nama konfigurasi.
+Untuk deployment non-lokal, gunakan `APP_ENV=production`, `APP_DEBUG=false`,
+HTTPS, password database yang kuat, dan jalankan `php artisan optimize` setelah
+seluruh nilai `.env` final.

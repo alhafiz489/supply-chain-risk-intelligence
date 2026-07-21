@@ -11,6 +11,9 @@ use App\Http\Controllers\AdminRiskController;
 use App\Http\Controllers\AdminController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\WatchlistController;
+use App\Http\Controllers\SystemOverviewController;
+use App\Http\Controllers\NewsPageController;
+use App\Http\Controllers\DataCatalogController;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Session;
 
@@ -25,6 +28,20 @@ Route::get('/dashboard', function () {
 Route::get('/country-comparison', function () {
     return view('country-comparison');
 })->name('country.comparison');
+
+Route::get('/system-overview', SystemOverviewController::class)
+    ->name('system.overview');
+
+Route::get('/news', NewsPageController::class)
+    ->name('news.index');
+
+Route::get('/data/countries', [DataCatalogController::class, 'countries'])->name('data.countries');
+Route::get('/data/ports', [DataCatalogController::class, 'ports'])->name('data.ports');
+Route::get('/data/sentiments', [DataCatalogController::class, 'sentiments'])->name('data.sentiments');
+Route::get('/data/countries/{country}', [DataCatalogController::class, 'country'])->name('data.countries.show');
+Route::get('/data/ports/{port}', [DataCatalogController::class, 'port'])->name('data.ports.show');
+Route::get('/data/sentiments/{sentimentWord}', [DataCatalogController::class, 'sentiment'])->name('data.sentiments.show');
+Route::get('/news/{newsCache}', [DataCatalogController::class, 'news'])->name('news.show');
 
 Route::middleware('auth')->group(function () {
     Route::get('/watchlist', function () {

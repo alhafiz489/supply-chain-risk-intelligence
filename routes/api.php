@@ -7,9 +7,12 @@ use App\Http\Controllers\Api\CurrencyController;
 use App\Http\Controllers\Api\NewsController;
 use App\Http\Controllers\Api\PortController;
 use App\Http\Controllers\Api\RiskController;
+use App\Http\Controllers\Api\GlobalMapController;
 use Illuminate\Support\Facades\Route;
 
 Route::middleware(LogApiRequest::class)->group(function () {
+    Route::get('/global-map', GlobalMapController::class)
+        ->name('api.global-map');
     Route::get(
     '/economy',
     [EconomicController::class, 'index']

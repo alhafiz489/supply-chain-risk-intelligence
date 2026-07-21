@@ -17,6 +17,8 @@
         href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
         crossorigin=""
     >
+    <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.css">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.Default.css">
 
     <!-- Chart.js -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -24,7 +26,8 @@
     <link rel="stylesheet" href="{{ asset('css/supplyguard-professional.css') }}">
 </head>
 
-<body class="sg-user-body">
+<body class="sg-user-body sg-user-sidebar-layout">
+@include('user.partials.sidebar')
 <nav class="navbar navbar-expand-lg navbar-dark sg-user-navbar">
     <div class="container-xxl">
         <a class="sg-brand navbar-brand" href="{{ route('dashboard') }}">
@@ -60,6 +63,12 @@
                     <a href="{{ route('watchlist.index') }}"
                        class="nav-link {{ request()->routeIs('watchlist.*') ? 'active' : '' }}">
                         {{ app()->getLocale() === 'id' ? 'Daftar Favorit' : 'Favorite List' }}
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="{{ route('system.overview') }}"
+                       class="nav-link {{ request()->routeIs('system.overview') ? 'active' : '' }}">
+                        {{ app()->getLocale() === 'id' ? 'Cakupan Sistem' : 'System Overview' }}
                     </a>
                 </li>
             </ul>
@@ -261,7 +270,7 @@
             </div>
 
             <!-- Form analisis -->
-            <section class="analysis-panel mt-4">
+            <section id="riskAnalysisSection" class="analysis-panel mt-4">
                 <label
                     for="countrySelect"
                     class="form-label fw-semibold"
@@ -612,7 +621,7 @@
             <!-- Grafik -->
             <section
                 id="visualizationSection"
-                class="visualization-section mt-4 d-none"
+                class="visualization-section mt-4"
             >
                 <div class="mb-4">
                     <h4 class="fw-bold mb-1">
@@ -693,40 +702,70 @@
             <!-- Peta pelabuhan -->
             <section
                 id="portSection"
-                class="visualization-section mt-4 d-none"
+                class="visualization-section mt-4"
             >
                 <div class="row g-4">
                     <div class="col-lg-8">
                         <h4 class="fw-bold mb-1">
                             {{ app()->getLocale() === 'id'
-                                ? 'Peta Lokasi Pelabuhan'
-                                : 'Port Location Map'
+                                ? 'Peta Global Negara dan Pelabuhan'
+                                : 'Global Country and Port Map'
                             }}
                         </h4>
 
                         <p class="text-muted">
                             {{ app()->getLocale() === 'id'
-                                ? 'Lokasi pelabuhan utama pada negara yang dipilih.'
-                                : 'Main port locations in the selected country.'
+                                ? 'Semua negara dan pelabuhan ditampilkan. Klik marker atau cluster untuk melihat detail.'
+                                : 'All countries and ports are shown. Click a marker or cluster to view details.'
                             }}
                         </p>
 
+                        <div class="map-legend" aria-label="Map marker legend">
+                            <span><i class="map-legend-dot map-legend-country"></i>{{ app()->getLocale() === 'id' ? 'Negara' : 'Country' }}</span>
+                            <span><i class="map-legend-dot map-legend-port"></i>{{ app()->getLocale() === 'id' ? 'Pelabuhan' : 'Port' }}</span>
+                            <span><i class="map-legend-dot map-legend-selected-port"></i>{{ app()->getLocale() === 'id' ? 'Pelabuhan Hasil Analisis' : 'Analyzed-country Port' }}</span>
+                        </div>
+                        <form id="globalMapSearchForm" class="global-map-search" role="search">
+                            <div class="global-map-search-field">
+                                <span aria-hidden="true">⌕</span>
+                                <input
+                                    id="globalMapSearchInput"
+                                    type="search"
+                                    autocomplete="off"
+                                    placeholder="{{ app()->getLocale() === 'id' ? 'Cari negara, ibu kota, pelabuhan, kota, atau UN/LOCODE...' : 'Search country, capital, port, city, or UN/LOCODE...' }}"
+                                    aria-label="{{ app()->getLocale() === 'id' ? 'Cari pada peta global' : 'Search the global map' }}"
+                                >
+                            </div>
+                            <select id="globalMapSearchType" aria-label="{{ app()->getLocale() === 'id' ? 'Jenis pencarian' : 'Search type' }}">
+                                <option value="all">{{ app()->getLocale() === 'id' ? 'Semua' : 'All' }}</option>
+                                <option value="country">{{ app()->getLocale() === 'id' ? 'Negara' : 'Country' }}</option>
+                                <option value="port">{{ app()->getLocale() === 'id' ? 'Pelabuhan' : 'Port' }}</option>
+                            </select>
+                            <button type="submit">
+                                <span aria-hidden="true">⌕</span>
+                                {{ app()->getLocale() === 'id' ? 'Cari' : 'Search' }}
+                            </button>
+                        </form>
+                        <div id="globalMapSearchResults" class="global-map-search-results d-none" aria-live="polite"></div>
+                        <div id="globalMapStatus" class="alert alert-info py-2 small">
+                            {{ app()->getLocale() === 'id' ? 'Memuat peta global...' : 'Loading global map...' }}
+                        </div>
                         <div id="portMap"></div>
                     </div>
 
                     <div class="col-lg-4">
                         <h5 class="fw-bold mb-3">
                             {{ app()->getLocale() === 'id'
-                                ? 'Informasi Pelabuhan'
-                                : 'Port Information'
+                                ? 'Ringkasan Peta Global'
+                                : 'Global Map Summary'
                             }}
                         </h5>
 
                         <div id="portInformationList">
                             <p class="text-muted">
                                 {{ app()->getLocale() === 'id'
-                                    ? 'Pilih negara untuk melihat informasi pelabuhan.'
-                                    : 'Select a country to view port information.'
+                                    ? 'Data negara dan pelabuhan sedang dimuat.'
+                                    : 'Country and port data are loading.'
                                 }}
                             </p>
                         </div>
@@ -761,6 +800,7 @@
     src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
     crossorigin=""
 ></script>
+<script src="https://unpkg.com/leaflet.markercluster@1.5.3/dist/leaflet.markercluster.js"></script>
 
 <script>
     const currentLocale = @json(app()->getLocale());
@@ -769,6 +809,22 @@
     let currencyTrendChartInstance = null;
     let portMapInstance = null;
     let portMarkerGroup = null;
+    let globalCountryLayer = null;
+    let globalPortCluster = null;
+    let globalMapLoaded = false;
+    let selectedPortLayer = null;
+    let globalMapCountries = [];
+    const globalPortSearchItems = [];
+    const globalCountryMarkers = new Map();
+    const professionalPopupOptions = {
+        maxWidth: 390,
+        minWidth: 340,
+        maxHeight: 365,
+        autoPan: true,
+        keepInView: true,
+        autoPanPaddingTopLeft: [24, 24],
+        autoPanPaddingBottomRight: [24, 24]
+    };
 
     const text = {
         selectCountry: @json(__('messages.select_country')),
@@ -835,7 +891,16 @@
     };
 
     document.addEventListener('DOMContentLoaded', function () {
+        const globalMapSection = document.getElementById('portSection');
+        const heroSection = document.querySelector('.sg-hero');
+
+        if (globalMapSection && heroSection) {
+            heroSection.insertAdjacentElement('afterend', globalMapSection);
+        }
+
         loadCountries();
+        initializeGlobalMapSearch();
+        loadGlobalMap();
     });
 
     async function loadCountries() {
@@ -971,7 +1036,7 @@
                 country.name
             );
 
-            renderPortMap(ports, country);
+            focusCountryOnGlobalMap(country, ports);
         } catch (error) {
             console.error(error);
             showStatus(error.message || text.analysisFailed, 'danger');
@@ -1542,7 +1607,565 @@
         });
     }
 
-    function renderPortMap(ports, country) {
+    function initializeGlobalMapSearch() {
+        const form = document.getElementById('globalMapSearchForm');
+        const input = document.getElementById('globalMapSearchInput');
+        const results = document.getElementById('globalMapSearchResults');
+
+        form.addEventListener('submit', function (event) {
+            event.preventDefault();
+            searchGlobalMap();
+        });
+
+        input.addEventListener('input', function () {
+            if (input.value.trim().length === 0) {
+                results.classList.add('d-none');
+                results.innerHTML = '';
+            }
+        });
+    }
+
+    function normalizeMapSearchValue(value) {
+        return String(value || '')
+            .normalize('NFD')
+            .replace(/[\u0300-\u036f]/g, '')
+            .toLowerCase()
+            .trim();
+    }
+
+    function searchGlobalMap() {
+        const input = document.getElementById('globalMapSearchInput');
+        const type = document.getElementById('globalMapSearchType').value;
+        const resultsElement = document.getElementById('globalMapSearchResults');
+        const query = normalizeMapSearchValue(input.value);
+
+        if (query.length < 2) {
+            resultsElement.classList.remove('d-none');
+            resultsElement.innerHTML = `<div class="global-map-search-empty">${currentLocale === 'id' ? 'Masukkan minimal 2 karakter.' : 'Enter at least 2 characters.'}</div>`;
+            return;
+        }
+
+        const results = [];
+
+        if (type === 'all' || type === 'country') {
+            globalMapCountries.forEach(function (country) {
+                const fields = [country.name, country.iso2, country.capital, country.region]
+                    .map(normalizeMapSearchValue);
+                if (fields.some(field => field.includes(query))) {
+                    results.push({
+                        kind: 'country',
+                        primary: country.name,
+                        secondary: `${country.iso2 || '-'} · ${country.capital || '-'} · ${country.region || '-'}`,
+                        country
+                    });
+                }
+            });
+        }
+
+        if (type === 'all' || type === 'port') {
+            globalPortSearchItems.forEach(function (item) {
+                const fields = [item.port.name, item.port.city, item.port.unlocode, item.port.country_name]
+                    .map(normalizeMapSearchValue);
+                if (fields.some(field => field.includes(query))) {
+                    results.push({
+                        kind: 'port',
+                        primary: item.port.name,
+                        secondary: `${item.port.unlocode || '-'} · ${item.port.city || '-'} · ${item.port.country_name || '-'}`,
+                        portItem: item
+                    });
+                }
+            });
+        }
+
+        results.sort(function (a, b) {
+            const aStarts = normalizeMapSearchValue(a.primary).startsWith(query) ? 0 : 1;
+            const bStarts = normalizeMapSearchValue(b.primary).startsWith(query) ? 0 : 1;
+            return aStarts - bStarts || a.primary.localeCompare(b.primary);
+        });
+
+        renderGlobalMapSearchResults(results.slice(0, 12), results.length, query);
+    }
+
+    function renderGlobalMapSearchResults(results, total, query) {
+        const resultsElement = document.getElementById('globalMapSearchResults');
+        resultsElement.classList.remove('d-none');
+        resultsElement.innerHTML = '';
+
+        if (results.length === 0) {
+            resultsElement.innerHTML = `<div class="global-map-search-empty">${currentLocale === 'id' ? 'Lokasi tidak ditemukan.' : 'No location found.'}</div>`;
+            return;
+        }
+
+        const heading = document.createElement('div');
+        heading.className = 'global-map-search-heading';
+        heading.textContent = currentLocale === 'id'
+            ? `${total} hasil ditemukan · menampilkan ${results.length}`
+            : `${total} results found · showing ${results.length}`;
+        resultsElement.appendChild(heading);
+
+        results.forEach(function (result) {
+            const button = document.createElement('button');
+            button.type = 'button';
+            button.className = 'global-map-search-result';
+            button.innerHTML = `
+                <span class="global-map-result-icon ${result.kind}">${result.kind === 'country' ? '◎' : '⚓'}</span>
+                <span><strong>${escapeHtml(result.primary)}</strong><small>${escapeHtml(result.secondary)}</small></span>
+                <em>${result.kind === 'country' ? (currentLocale === 'id' ? 'Negara' : 'Country') : (currentLocale === 'id' ? 'Pelabuhan' : 'Port')}</em>
+            `;
+            button.addEventListener('click', function () {
+                focusGlobalMapSearchResult(result);
+                resultsElement.classList.add('d-none');
+            });
+            resultsElement.appendChild(button);
+        });
+    }
+
+    function focusGlobalMapSearchResult(result) {
+        document.getElementById('portMap').scrollIntoView({ behavior: 'smooth', block: 'center' });
+
+        if (result.kind === 'country') {
+            const marker = globalCountryMarkers.get(Number(result.country.id));
+            portMapInstance.setView([Number(result.country.latitude), Number(result.country.longitude)], 6);
+            if (marker) {
+                marker.openPopup();
+            }
+            return;
+        }
+
+        const marker = result.portItem.marker;
+        const showMarker = function () {
+            portMapInstance.setView(marker.getLatLng(), 10);
+            marker.openPopup();
+        };
+
+        if (globalPortCluster && typeof globalPortCluster.zoomToShowLayer === 'function') {
+            globalPortCluster.zoomToShowLayer(marker, showMarker);
+        } else {
+            showMarker();
+        }
+    }
+
+    async function loadGlobalMap() {
+        const status = document.getElementById('globalMapStatus');
+        const informationList = document.getElementById('portInformationList');
+
+        try {
+            const response = await fetch('/api/global-map', {
+                headers: { 'Accept': 'application/json' }
+            });
+            const payload = await response.json();
+
+            if (!response.ok || !payload.success) {
+                throw new Error('Global map data is unavailable.');
+            }
+
+            await renderGlobalMap(payload.data.countries, payload.data.ports);
+            globalMapLoaded = true;
+
+            status.className = 'alert alert-success py-2 small';
+            status.textContent = currentLocale === 'id'
+                ? `${payload.meta.country_count} negara dan ${payload.meta.port_count.toLocaleString()} pelabuhan ditampilkan.`
+                : `${payload.meta.country_count} countries and ${payload.meta.port_count.toLocaleString()} ports displayed.`;
+
+            informationList.innerHTML = `
+                <div class="global-map-summary-card">
+                    <strong>${payload.meta.country_count.toLocaleString()}</strong>
+                    <span>${currentLocale === 'id' ? 'Negara dengan koordinat' : 'Countries with coordinates'}</span>
+                </div>
+                <div class="global-map-summary-card">
+                    <strong>${payload.meta.port_count.toLocaleString()}</strong>
+                    <span>${currentLocale === 'id' ? 'Pelabuhan dengan koordinat' : 'Ports with coordinates'}</span>
+                </div>
+                <div class="alert alert-light border small mb-0">
+                    ${currentLocale === 'id'
+                        ? 'Klik angka cluster untuk memperbesar area. Klik marker biru untuk detail negara dan marker oranye untuk detail pelabuhan.'
+                        : 'Click a cluster count to zoom in. Click a blue marker for country details or an orange marker for port details.'}
+                </div>
+            `;
+        } catch (error) {
+            console.error(error);
+            status.className = 'alert alert-danger py-2 small';
+            status.textContent = currentLocale === 'id'
+                ? 'Peta global gagal dimuat. Muat ulang halaman untuk mencoba lagi.'
+                : 'The global map failed to load. Reload the page to try again.';
+        }
+    }
+
+    function renderCountryMapPopup(country) {
+        const riskScore = country.total_risk_score ?? '-';
+        const riskLabel = country.risk_label || text.componentUnavailable;
+        const completeness = Number(country.data_completeness_percent ?? 0);
+
+        return `
+            <article class="professional-map-popup country-detail-popup">
+                <header class="professional-popup-header">
+                    <div class="professional-popup-icon">${escapeHtml(country.iso2 || '🌐')}</div>
+                    <div><small>${currentLocale === 'id' ? 'PROFIL NEGARA' : 'COUNTRY PROFILE'}</small><h3>${escapeHtml(country.name)}</h3></div>
+                    <span class="professional-popup-status">${escapeHtml(country.risk_data_status || '-')}</span>
+                </header>
+                <div class="professional-popup-body">
+                    <div class="popup-identity-line"><span>📍 ${escapeHtml(country.capital || '-')}</span><span>${escapeHtml(country.region || '-')}</span></div>
+                    <section class="popup-section">
+                        <h4>${currentLocale === 'id' ? 'Ekonomi & Populasi' : 'Economy & Population'}</h4>
+                        <div class="popup-metric-grid">
+                            <div><small>GDP</small><strong>${escapeHtml(formatNumber(country.gdp_usd_billion))}</strong><span>USD Billion</span></div>
+                            <div><small>${currentLocale === 'id' ? 'Inflasi' : 'Inflation'}</small><strong>${escapeHtml(formatNumber(country.inflation_rate))}%</strong><span>${currentLocale === 'id' ? 'Tahunan' : 'Annual'}</span></div>
+                            <div><small>${currentLocale === 'id' ? 'Populasi' : 'Population'}</small><strong>${escapeHtml(formatNumber(country.population_million))}</strong><span>Million</span></div>
+                            <div><small>${currentLocale === 'id' ? 'Mata uang' : 'Currency'}</small><strong>${escapeHtml(country.currency_code || '-')}</strong><span>${escapeHtml(country.iso2 || '-')}</span></div>
+                        </div>
+                    </section>
+                    <section class="popup-section">
+                        <h4>${currentLocale === 'id' ? 'Cuaca Terkini' : 'Current Weather'}</h4>
+                        <div class="popup-inline-stats">
+                            <span>🌤 ${escapeHtml(country.weather_condition || '-')}</span>
+                            <span>🌡 ${escapeHtml(formatNumber(country.temperature))}°C</span>
+                            <span>🌧 ${escapeHtml(formatNumber(country.rainfall_mm))} mm</span>
+                            <span>💨 ${escapeHtml(formatNumber(country.wind_speed_kmh))} km/h</span>
+                        </div>
+                    </section>
+                    <section class="popup-risk-panel">
+                        <div><small>${currentLocale === 'id' ? 'Skor Risiko Terakhir' : 'Latest Risk Score'}</small><strong>${escapeHtml(String(riskScore))}/100</strong></div>
+                        <div><span class="popup-risk-label">${escapeHtml(riskLabel)}</span><small>${currentLocale === 'id' ? 'Kelengkapan' : 'Completeness'} ${completeness}%</small></div>
+                    </section>
+                    ${country.recommendation ? `<p class="popup-recommendation">💡 ${escapeHtml(country.recommendation)}</p>` : ''}
+                </div>
+            </article>
+        `;
+    }
+
+    function renderPortMapPopup(port, selected = false) {
+        const delayText = port.delay_days === null || port.delay_days === undefined
+            ? text.componentUnavailable
+            : `${Number(port.delay_days)} ${currentLocale === 'id' ? 'hari' : 'days'}`;
+        const operational = port.data_status !== 'reference_only';
+        const identityItems = [
+            ['UN/LOCODE', port.unlocode],
+            ['IATA', port.iata_code],
+            [currentLocale === 'id' ? 'Subdivisi' : 'Subdivision', port.subdivision_code],
+            [currentLocale === 'id' ? 'Status lokasi' : 'Location status', decodePortStatus(port.status_code)]
+        ].filter(item => item[1] !== null && item[1] !== undefined && String(item[1]).trim() !== '');
+        const identityHtml = identityItems.map(item => `
+            <div><span>${escapeHtml(item[0])}</span><strong>${escapeHtml(item[1])}</strong></div>
+        `).join('');
+        const functionLabels = decodePortFunctions(port.function_code);
+
+        return `
+            <article class="professional-map-popup port-detail-popup ${selected ? 'selected-detail-popup' : ''}">
+                <header class="professional-popup-header">
+                    <div class="professional-popup-icon">⚓</div>
+                    <div><small>${selected ? (currentLocale === 'id' ? 'PELABUHAN HASIL ANALISIS' : 'ANALYZED-COUNTRY PORT') : (currentLocale === 'id' ? 'PROFIL PELABUHAN' : 'PORT PROFILE')}</small><h3>${escapeHtml(port.name)}</h3></div>
+                    <span class="professional-popup-status ${operational ? 'status-operational' : ''}">${operational ? (currentLocale === 'id' ? 'Operasional' : 'Operational') : (currentLocale === 'id' ? 'Referensi' : 'Reference')}</span>
+                </header>
+                <div class="professional-popup-body">
+                    <div class="popup-identity-line"><span>📍 ${escapeHtml(port.city || '-')}</span><span>${escapeHtml(port.country_name || '-')}</span></div>
+                    <section class="popup-section">
+                        <h4>${currentLocale === 'id' ? 'Identitas Pelabuhan' : 'Port Identity'}</h4>
+                        <div class="popup-detail-list">
+                            ${identityHtml}
+                        </div>
+                    </section>
+                    ${functionLabels.length > 0 ? `
+                        <section class="popup-section">
+                            <h4>${currentLocale === 'id' ? 'Fungsi Lokasi' : 'Location Functions'}</h4>
+                            <div class="popup-function-tags">${functionLabels.map(label => `<span>${escapeHtml(label)}</span>`).join('')}</div>
+                        </section>
+                    ` : ''}
+                    <section class="popup-section">
+                        <h4>${currentLocale === 'id' ? 'Kondisi Operasional' : 'Operational Condition'}</h4>
+                        ${operational ? `
+                            <div class="popup-metric-grid popup-port-metrics">
+                                <div><small>${currentLocale === 'id' ? 'Kemacetan' : 'Congestion'}</small><strong>${escapeHtml(translateCongestionLevel(port.congestion_level))}</strong></div>
+                                <div><small>${currentLocale === 'id' ? 'Keterlambatan' : 'Delay'}</small><strong>${escapeHtml(delayText)}</strong></div>
+                            </div>
+                        ` : `
+                            <div class="reference-data-notice">
+                                <strong>${currentLocale === 'id' ? 'Data referensi lokasi' : 'Location reference data'}</strong>
+                                <span>${currentLocale === 'id'
+                                    ? 'UN/LOCODE tidak menyediakan data kemacetan atau keterlambatan waktu nyata untuk lokasi ini.'
+                                    : 'UN/LOCODE does not provide real-time congestion or delay data for this location.'}</span>
+                            </div>
+                        `}
+                    </section>
+                    <div class="popup-coordinate-box"><span>${Number(port.latitude).toFixed(5)}, ${Number(port.longitude).toFixed(5)}</span><small>${currentLocale === 'id' ? 'Sumber' : 'Source'}: ${escapeHtml(port.source || 'UN/LOCODE')} ${escapeHtml(port.source_version || '')}</small></div>
+                </div>
+            </article>
+        `;
+    }
+
+    function decodePortFunctions(code) {
+        const normalized = String(code || '').padEnd(8, '-');
+        const labels = currentLocale === 'id'
+            ? ['Pelabuhan laut', 'Terminal kereta', 'Terminal jalan', 'Bandara', 'Kantor pos', 'Terminal multimoda', 'Transportasi tetap', 'Perbatasan']
+            : ['Seaport', 'Rail terminal', 'Road terminal', 'Airport', 'Postal exchange', 'Multimodal terminal', 'Fixed transport', 'Border crossing'];
+
+        return labels.filter((label, index) => normalized[index] !== '-');
+    }
+
+    function decodePortStatus(code) {
+        const statuses = {
+            AA: currentLocale === 'id' ? 'Disetujui otoritas nasional' : 'Approved by national authority',
+            AC: currentLocale === 'id' ? 'Disetujui bea cukai' : 'Approved by customs',
+            AF: currentLocale === 'id' ? 'Disetujui badan fasilitasi' : 'Approved by facilitation body',
+            AI: currentLocale === 'id' ? 'Diadopsi organisasi internasional' : 'Adopted by international organization',
+            AM: currentLocale === 'id' ? 'Disetujui secara resmi' : 'Officially approved',
+            AS: currentLocale === 'id' ? 'Disetujui badan standardisasi' : 'Approved by standards body',
+            RL: currentLocale === 'id' ? 'Lokasi diakui' : 'Recognized location',
+            QQ: currentLocale === 'id' ? 'Belum diverifikasi' : 'Not yet verified',
+            RQ: currentLocale === 'id' ? 'Permintaan perubahan' : 'Change requested'
+        };
+
+        return statuses[String(code || '').toUpperCase()] || code || null;
+    }
+
+    async function renderGlobalMap(countries, ports) {
+        globalMapCountries = countries;
+        globalPortSearchItems.length = 0;
+        if (!portMapInstance) {
+            portMapInstance = L.map('portMap', {
+                worldCopyJump: false,
+                preferCanvas: true,
+                minZoom: 1.5,
+                zoomSnap: 0.25,
+                zoomDelta: 0.25,
+                maxBounds: [[-85, -180], [85, 180]],
+                maxBoundsViscosity: 1
+            }).setView([8, 0], 1.5);
+
+            L.tileLayer(
+                'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
+                {
+                    maxZoom: 19,
+                    minZoom: 1,
+                    noWrap: true,
+                    bounds: [[-85, -180], [85, 180]],
+                    attribution: '&copy; OpenStreetMap contributors'
+                }
+            ).addTo(portMapInstance);
+        }
+
+        globalCountryLayer = L.layerGroup().addTo(portMapInstance);
+        globalPortCluster = typeof L.markerClusterGroup === 'function'
+            ? L.markerClusterGroup({
+                chunkedLoading: true,
+                chunkInterval: 100,
+                chunkDelay: 25,
+                maxClusterRadius: 55,
+                showCoverageOnHover: false,
+                spiderfyOnMaxZoom: true
+            })
+            : L.layerGroup();
+
+        globalCountryMarkers.clear();
+
+        countries.forEach(function (country) {
+            const marker = L.marker(
+                [Number(country.latitude), Number(country.longitude)],
+                {
+                    icon: L.divIcon({
+                        className: 'global-country-marker-shell',
+                        html: `<span class="global-country-marker">${escapeHtml(country.iso2 || '●')}</span>`,
+                        iconSize: [34, 34],
+                        iconAnchor: [17, 17],
+                        popupAnchor: [0, -18]
+                    }),
+                    zIndexOffset: 1000,
+                    title: country.name
+                }
+            );
+
+            marker.bindPopup(() => renderCountryMapPopup(country), professionalPopupOptions);
+
+            marker.addTo(globalCountryLayer);
+            globalCountryMarkers.set(Number(country.id), marker);
+        });
+
+        globalPortCluster.addTo(portMapInstance);
+
+        await addPortMarkersInBatches(ports);
+
+        L.control.layers(
+            {},
+            {
+                [currentLocale === 'id' ? 'Negara' : 'Countries']: globalCountryLayer,
+                [currentLocale === 'id' ? 'Pelabuhan' : 'Ports']: globalPortCluster
+            },
+            { collapsed: true }
+        ).addTo(portMapInstance);
+
+        setTimeout(function () {
+            portMapInstance.invalidateSize();
+            portMapInstance.setView([8, 0], 1.5);
+        }, 250);
+    }
+
+    function addPortMarkersInBatches(ports) {
+        const status = document.getElementById('globalMapStatus');
+        const batchSize = 250;
+        let index = 0;
+
+        return new Promise(function (resolve) {
+            function processBatch() {
+                const markers = [];
+                const end = Math.min(index + batchSize, ports.length);
+
+                for (; index < end; index += 1) {
+                    const port = ports[index];
+                    const marker = L.marker(
+                        [Number(port.latitude), Number(port.longitude)],
+                        {
+                            icon: L.divIcon({
+                                className: 'global-port-marker-shell',
+                                html: '<span class="global-port-marker"></span>',
+                                iconSize: [18, 18],
+                                iconAnchor: [9, 9],
+                                popupAnchor: [0, -10]
+                            }),
+                            title: port.name
+                        }
+                    );
+
+                    marker.bindPopup(() => renderPortMapPopup(port), professionalPopupOptions);
+                    globalPortSearchItems.push({ port, marker });
+
+                    markers.push(marker);
+                }
+
+                if (typeof globalPortCluster.addLayers === 'function') {
+                    globalPortCluster.addLayers(markers);
+                } else {
+                    markers.forEach(marker => marker.addTo(globalPortCluster));
+                }
+
+                const percent = ports.length > 0
+                    ? Math.round((index / ports.length) * 100)
+                    : 100;
+                status.textContent = currentLocale === 'id'
+                    ? `Menyiapkan marker pelabuhan... ${percent}%`
+                    : `Preparing port markers... ${percent}%`;
+
+                if (index < ports.length) {
+                    window.setTimeout(processBatch, 0);
+                    return;
+                }
+
+                resolve();
+            }
+
+            processBatch();
+        });
+    }
+
+    function focusCountryOnGlobalMap(country, ports) {
+        if (!portMapInstance || !globalMapLoaded) {
+            return;
+        }
+
+        const marker = globalCountryMarkers.get(Number(country.id));
+        const latitude = Number(country.latitude);
+        const longitude = Number(country.longitude);
+        const informationList = document.getElementById('portInformationList');
+
+        if (!selectedPortLayer) {
+            selectedPortLayer = L.layerGroup().addTo(portMapInstance);
+        }
+        selectedPortLayer.clearLayers();
+
+        const selectedCoordinates = [];
+        const selectedMarkers = [];
+
+        (Array.isArray(ports) ? ports : []).forEach(function (port, index) {
+            port.country_name = port.country_name || country.name;
+            const portLatitude = Number(port.latitude);
+            const portLongitude = Number(port.longitude);
+
+            if (!Number.isFinite(portLatitude) || !Number.isFinite(portLongitude)) {
+                return;
+            }
+
+            const delayText = port.delay_days === null || port.delay_days === undefined
+                ? text.componentUnavailable
+                : `${Number(port.delay_days)} ${currentLocale === 'id' ? 'hari' : 'days'}`;
+            const selectedMarker = L.marker(
+                [portLatitude, portLongitude],
+                {
+                    icon: L.divIcon({
+                        className: 'selected-port-marker-shell',
+                        html: '<span class="selected-port-marker" aria-hidden="true">⚓</span>',
+                        iconSize: [38, 38],
+                        iconAnchor: [19, 19],
+                        popupAnchor: [0, -21]
+                    }),
+                    zIndexOffset: 2000,
+                    title: port.name
+                }
+            );
+
+            selectedMarker.bindPopup(() => renderPortMapPopup(port, true), professionalPopupOptions);
+
+            selectedMarker.addTo(selectedPortLayer);
+            selectedMarkers.push({ marker: selectedMarker, port, index });
+            selectedCoordinates.push([portLatitude, portLongitude]);
+        });
+
+        if (selectedMarkers.length > 0) {
+            informationList.innerHTML = `
+                <div class="selected-country-port-header">
+                    <span>${currentLocale === 'id' ? 'Pelabuhan di' : 'Ports in'} <strong>${escapeHtml(country.name)}</strong></span>
+                    <strong>${selectedMarkers.length}</strong>
+                </div>
+                <p class="small text-muted mb-3">
+                    ${currentLocale === 'id'
+                        ? 'Marker jangkar hijau adalah pelabuhan negara yang sedang dianalisis. Klik daftar untuk menemukannya di peta.'
+                        : 'Green anchor markers are ports in the analyzed country. Click the list to locate one on the map.'}
+                </p>
+                <div id="selectedPortList" class="selected-port-list"></div>
+            `;
+
+            const selectedPortList = document.getElementById('selectedPortList');
+            selectedMarkers.forEach(function (item, listIndex) {
+                const button = document.createElement('button');
+                button.type = 'button';
+                button.className = 'selected-port-item';
+                button.innerHTML = `
+                    <span class="selected-port-item-icon">⚓</span>
+                    <span>
+                        <strong>${escapeHtml(item.port.name)}</strong>
+                        <small>${escapeHtml(item.port.city || '-')}
+                            · ${escapeHtml(item.port.unlocode || '-')}</small>
+                        <em class="selected-port-data-type ${item.port.data_status === 'reference_only' ? 'is-reference' : 'is-operational'}">
+                            ${item.port.data_status === 'reference_only'
+                                ? (currentLocale === 'id' ? 'Referensi lokasi' : 'Location reference')
+                                : (currentLocale === 'id' ? 'Data operasional' : 'Operational data')}
+                        </em>
+                    </span>
+                `;
+                button.addEventListener('click', function () {
+                    portMapInstance.setView(item.marker.getLatLng(), 9);
+                    item.marker.openPopup();
+                });
+                selectedPortList.appendChild(button);
+            });
+        } else {
+            informationList.innerHTML = `
+                <div class="alert alert-warning mb-0">
+                    ${currentLocale === 'id'
+                        ? `Belum ada pelabuhan berkoordinat untuk ${escapeHtml(country.name)}.`
+                        : `No geocoded ports are available for ${escapeHtml(country.name)}.`}
+                </div>
+            `;
+        }
+
+        if (Number.isFinite(latitude) && Number.isFinite(longitude)) {
+            selectedCoordinates.push([latitude, longitude]);
+            if (selectedCoordinates.length > 1) {
+                portMapInstance.fitBounds(selectedCoordinates, { padding: [45, 45], maxZoom: 7 });
+            } else {
+                portMapInstance.setView([latitude, longitude], 5);
+            }
+        }
+    }
+
+    function renderPortMap(ports, country, risk) {
         const mapElement =
             document.getElementById('portMap');
 
@@ -1577,6 +2200,47 @@
 
         portMarkerGroup.clearLayers();
         informationList.innerHTML = '';
+
+        const countryLatitude = Number(country.latitude);
+        const countryLongitude = Number(country.longitude);
+        const hasCountryCoordinates =
+            Number.isFinite(countryLatitude)
+            && Number.isFinite(countryLongitude);
+
+        if (hasCountryCoordinates) {
+            const countryMarker = L.circleMarker(
+                [countryLatitude, countryLongitude],
+                {
+                    radius: 12,
+                    color: '#ffffff',
+                    weight: 3,
+                    fillColor: '#1667d9',
+                    fillOpacity: 1,
+                    className: 'country-map-marker'
+                }
+            );
+
+            countryMarker.bindPopup(`
+                <div class="map-popup map-popup-country">
+                    <strong>${escapeHtml(country.name)}</strong>
+                    <span class="map-popup-type">${currentLocale === 'id' ? 'NEGARA' : 'COUNTRY'}</span>
+                    <hr>
+                    ${currentLocale === 'id' ? 'Ibu kota' : 'Capital'}:
+                    <strong>${escapeHtml(country.capital || '-')}</strong><br>
+                    ${currentLocale === 'id' ? 'Wilayah' : 'Region'}:
+                    ${escapeHtml(country.region || '-')}<br>
+                    ${currentLocale === 'id' ? 'Mata uang' : 'Currency'}:
+                    ${escapeHtml(country.currency_code || '-')}<br>
+                    GDP: ${escapeHtml(formatNumber(country.gdp_usd_billion))} USD Billion<br>
+                    ${currentLocale === 'id' ? 'Inflasi' : 'Inflation'}:
+                    ${escapeHtml(formatNumber(country.inflation_rate))}%<br>
+                    ${currentLocale === 'id' ? 'Skor risiko' : 'Risk score'}:
+                    <strong>${escapeHtml(String(risk.total_score ?? '-'))}/100</strong>
+                </div>
+            `);
+
+            countryMarker.addTo(portMarkerGroup);
+        }
 
         if (!Array.isArray(ports) || ports.length === 0) {
             informationList.innerHTML = `
@@ -1634,11 +2298,22 @@
                             : 'days'
                     }`;
 
-            const marker =
-                L.marker([latitude, longitude]);
+            const marker = L.circleMarker(
+                [latitude, longitude],
+                {
+                    radius: 7,
+                    color: '#ffffff',
+                    weight: 2,
+                    fillColor: '#f97316',
+                    fillOpacity: 1,
+                    className: 'port-map-marker'
+                }
+            );
 
             marker.bindPopup(`
+                <div class="map-popup map-popup-port">
                 <strong>${escapeHtml(port.name)}</strong>
+                <span class="map-popup-type">${currentLocale === 'id' ? 'PELABUHAN' : 'PORT'}</span>
                 <br>
                 UN/LOCODE:
                 ${escapeHtml(port.unlocode || '-')}
@@ -1651,6 +2326,10 @@
                 <br>
                 ${currentLocale === 'id' ? 'Keterlambatan' : 'Delay'}:
                 ${escapeHtml(delayText)}
+                <br>
+                ${currentLocale === 'id' ? 'Koordinat' : 'Coordinates'}:
+                ${latitude.toFixed(4)}, ${longitude.toFixed(4)}
+                </div>
             `);
 
             marker.addTo(portMarkerGroup);
